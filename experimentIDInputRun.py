@@ -42,7 +42,7 @@ pathExperiment = parameters['pathExperimentFolder']
 pathStep0 = os.path.join(pathScript,"Step0_SampleReorganisation","Step0.py")
 pathRawFiles = os.path.join(pathExperiment, "raw")
 commandStep0 = ["python3", pathStep0, pathScript, pathRawFiles]
-# subprocess.run(commandStep0)
+subprocess.run(commandStep0)
 
 #Step 1
 pathStep1 = os.path.join(pathScript,"Step1_extractBarcode","Step1.py")
@@ -52,7 +52,7 @@ lengthBarcode = parameters['step1ExtractBarcode']["barcodeLength"]
 minPhredScore = parameters['step1ExtractBarcode']["minPhred"]
 excludedReads = parameters['step1ExtractBarcode']["excludedReads"]
 commandStep1 = ["python3", pathStep1, pathScript, pathExperiment, pathStaggerFile, checkVector,lengthBarcode, minPhredScore, str(excludedReads)]
-# subprocess.call(commandStep1)
+subprocess.call(commandStep1)
 
 # Step 2
 pathStep2 = os.path.join(pathScript,"Step2_LVHistogram_MultipleSample","Step2.py")
@@ -61,7 +61,7 @@ sampleArray = ",".join(sampleArray)
 lvHistogramFraction = parameters["step2LvHistogramMultipleSamples"]["lvHistogramFraction"]
 lvHistogramLength = parameters["step2LvHistogramMultipleSamples"]["lvHistogramLength"]
 commandStep2 = ["python3", pathStep2, pathScript, pathExperiment, sampleArray, lvHistogramFraction, lvHistogramLength]
-# subprocess.call(commandStep2)
+# subproce/ss.call(commandStep2)
 
 #Step 3
 if parameters["pauseBeforeStep3"] == False:

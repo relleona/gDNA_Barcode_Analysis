@@ -25,7 +25,7 @@ parser = ArgumentParser()
 parser.add_argument("experiment", help = "Specify the path to the experiment directory")
 parser.add_argument("sampleName", help = "Specify the list of sample names")
 parser.add_argument("--length", help = "Specify which starcode length has to be plotted", choices=["30","40","50"], default=50)
-parser.add_argument("--d", help = "Specify the distance used for Levenshtein distance based clustering in starcode.", default="8")
+parser.add_argument("-d", help = "Specify the distance used for Levenshtein distance based clustering in starcode.", default="8")
 args = parser.parse_args()
 
 experimentDirectory = args.experiment
