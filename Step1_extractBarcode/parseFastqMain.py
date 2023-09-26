@@ -83,9 +83,9 @@ print("Parsing sample {}".format(args.sampleName))
 inFileNames = glob.glob("*fastq*")
 
 if args.checkVector == "both":
-	barcode_dict, missingBeforeBarcode, missingAfterBarcode, badQscore, badLength, badBarcode = parseBarcode_both(inFileNames, args.stagger, args.barcodeLength, minPhred)
+	barcode_dict, missingBeforeBarcode, missingAfterBarcode, badQscore, badLength, badBarcode, tot_reads = parseBarcode_both(inFileNames, args.stagger, args.barcodeLength, minPhred)
 elif args.checkVector == "before":
-	barcode_dict, missingBeforeBarcode, badQscore, badLength, badBarcode = parseBarcode_before(inFileNames, args.stagger, args.barcodeLength, minPhred)
+	barcode_dict, missingBeforeBarcode, badQscore, badLength, badBarcode, tot_reads = parseBarcode_before(inFileNames, args.stagger, args.barcodeLength, minPhred)
 
 
 #Writing out barcode and associated phredscore and UMIs to file. 
@@ -113,6 +113,7 @@ else:
 # Writing the summary file for this sample
 summary_file = args.sampleName + "_summary.txt"
 with open(summary_file, "w") as summary:
+	summary.write("Number of reads parsed is {}\n".format(tot_reads))
 	summary.write("Length of dictionary is {}\n".format(len(barcode_dict)))
 	summary.write("Number of reads missing sequence before barcode is {}\n".format(len(missingBeforeBarcode)))
 	if args.checkVector == "both":

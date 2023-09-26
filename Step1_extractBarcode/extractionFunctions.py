@@ -53,8 +53,8 @@ def parseBarcode_both(inFilename, staggerLength, barcodeLength, minQuality_Phred
 					missingVectorAfter.append(seq_record)
 				elif VBA and not VBB:
 					missingVectorBefore.append(seq_record)
-		print("Completed file " + fastQ_file + " and total reads parsed is " + str(tot_reads))
-	return barcode_dict, missingVectorBefore, missingVectorAfter, badQscore, badLength, badBarcode
+		print("Completed file " + fastQ_file)
+	return barcode_dict, missingVectorBefore, missingVectorAfter, badQscore, badLength, badBarcode, tot_reads
 
 def parseBarcode_before(inFileNames, staggerLength, barcodeLength, minPhred):
 	# Function to parse FASTQ file and create dictionary of key:value pairs. Will only extract reads that contain the vector sequence before the barcode allowing up to 4 mismatches. 
@@ -98,8 +98,8 @@ def parseBarcode_before(inFileNames, staggerLength, barcodeLength, minPhred):
 							barcode_dict[barcode].append(seq_record[1][0:spanBeforeBarcode[0]-staggerLength][0:spanBeforeBarcode[0]-staggerLength])
 				elif not VBB:
 					missingVectorBefore.append(seq_record)
-	print("Completed file " + fastQ_file + " and total reads parsed is " + str(tot_reads))
-	return barcode_dict, missingVectorBefore, badQscore, badLength, badBarcode
+	print("Completed file " + fastQ_file)
+	return barcode_dict, missingVectorBefore, badQscore, badLength, badBarcode, tot_reads
 
 def writeOutFileUMIs(barcode_dict, outFileName):
 	"""Function to write barcode dictionary to gzipped tab delimited file. Each line contains
