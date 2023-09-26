@@ -18,7 +18,7 @@ def Barcode_scanner(Combined_Barcode, sampleName, length, distance, ind):
         with ThreadPoolExecutor() as executor:
             for i in range(0, num_records, batch_size):
                 batch_data = data[i:i + batch_size]
-                indices = [np.array([int(x) for x in record[2].split(',')]) - 1 for record in batch_data]
+                indices = [np.array([int(x) for x in record[2].split(',')], dtype=object) - 1 for record in batch_data]
                 sequences = [record[0] for record in batch_data]
 
                 # Update DataFrame in parallel
@@ -62,7 +62,7 @@ def Separate_samples(Combined_reads, combined_flag, sampleName, length, dist):
 # This function counts the occurences of a particular barcode to give read counts
 def count_Barcode(Barcode_array):
     counter = Counter(Barcode_array)
-    result_array = np.array([(element, count) for element, count in counter.items()])
+    result_array = np.array([(element, count) for element, count in counter.items()], dtype=object)
     return result_array
 
 
