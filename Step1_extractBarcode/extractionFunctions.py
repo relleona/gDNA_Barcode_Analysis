@@ -23,7 +23,9 @@ def parseBarcode_both(inFilename, staggerLength, barcodeLength, minQuality_Phred
 	for fastQ_file in inFilename: #Loop over all fastQ files/lanes associated with each sample
 		with gzip.open(fastQ_file, 'rt') as fastq:
 			print("Started with file:{}".format(fastQ_file))
+			tot_reads = 0
 			for seq_record in FastqGeneralIterator(fastq): 
+				tot_reads +=1
 			#Uses BioPythons FastqGeneralIterator to parse each read.
 				VBB = vectorBeforeBarcode.search(seq_record[1]) #Vector before Barcode
 				VBA = vectorAfterBarcode.search(seq_record[1]) #Vector after Barcode, accounting for the length of Barcode
@@ -51,7 +53,7 @@ def parseBarcode_both(inFilename, staggerLength, barcodeLength, minQuality_Phred
 					missingVectorAfter.append(seq_record)
 				elif VBA and not VBB:
 					missingVectorBefore.append(seq_record)
-		print("Completed file: " + fastQ_file)
+		print("Completed file " + fastQ_file + " and total reads parsed is " + str(tot_reads))
 	return barcode_dict, missingVectorBefore, missingVectorAfter, badQscore, badLength, badBarcode
 
 def parseBarcode_before(inFileNames, staggerLength, barcodeLength, minPhred):
@@ -69,8 +71,10 @@ def parseBarcode_before(inFileNames, staggerLength, barcodeLength, minPhred):
 	vectorAfterBarcode = re.compile(r'(?e)(?r)(ATCCTACTTGTACAGCTCGT){e<=5}') #vector sequence after barcode as reg expression. Allow up to 5 mismatches and search from end of string first. ***What determines these numbers?
 	for fastQ_file in inFileNames:
 		#Loop over all fastQ files/lanes associated with each sample
+		tot_reads = 0
 		with gzip.open(fastQ_file, 'rt') as fastq:
 			for seq_record in FastqGeneralIterator(fastq): #Uses BioPythons FastqGeneralIterator to parse each read.
+				tot_reads += 1
 				VBB = vectorBeforeBarcode.search(seq_record[1])
 				if VBB: #Check that the read contains the vector sequence before the barcode.
 					
@@ -94,6 +98,7 @@ def parseBarcode_before(inFileNames, staggerLength, barcodeLength, minPhred):
 							barcode_dict[barcode].append(seq_record[1][0:spanBeforeBarcode[0]-staggerLength][0:spanBeforeBarcode[0]-staggerLength])
 				elif not VBB:
 					missingVectorBefore.append(seq_record)
+	print("Completed file " + fastQ_file + " and total reads parsed is " + str(tot_reads))
 	return barcode_dict, missingVectorBefore, badQscore, badLength, badBarcode
 
 def writeOutFileUMIs(barcode_dict, outFileName):

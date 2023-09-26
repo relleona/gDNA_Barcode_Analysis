@@ -29,7 +29,6 @@ import multiprocessing
 def process_sample(sample_info):
     sample, stagger, additional_args = sample_info
     command = ["python3", pathExtractionScript, args.experiment, sample, "-s", stagger] + additional_args
-    print(sample, stagger)
     # print(f"Processing sample: {sample}")
     subprocess.run(command)
 
