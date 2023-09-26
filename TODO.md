@@ -1,3 +1,3 @@
 - [ ] Make Starcode silent
 - [ ] Replace print with echo statements to update Outlog
-- [ ] Trial Parallelised Envelope.py and update to repo
+- [x] Trial Parallelised Envelope.py and update to repo
