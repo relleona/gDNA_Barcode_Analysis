@@ -23,54 +23,70 @@ import subprocess
 import csv
 from argparse import ArgumentParser
 import glob
+import multiprocessing
 
-#Command line parser 
-parser = ArgumentParser()
-parser.add_argument("experiment", help = "Specify the path to the experiment directory")
-parser.add_argument("pathScript", help = "Specify the path containing the script files.", type = str)
-parser.add_argument("--pathStaggerFile", help = "Specify the path to the file containing information on length of stagger for each sample")
-parser.add_argument("-r", "--includeReads", help = "If specified, output additional tables with barcodes and only read counts or UMI counts. Otherwise outputs only one table with both counts", action = 'store_true')
-parser.add_argument("-checkVector", help = "Option to check vector sequence before or on both sides of the barcode sequence.", default = "both", choices = ["both", "before"]) 
-parser.add_argument("-barcodeLength", help = "If check_vector before specified, input here your desired barcode length. Default is 100", default = "100", type = str) 
-parser.add_argument("-Q", "--minPhred", help = "Specify the minimum phredscore required to include a readout. Filters reads with more than 5 bases before the barcode with low phredscore.", default = "14", type = str) 
-parser.add_argument("-e", "--excludedReads", help = "If specified, output txt.gz files containing reads excluded from the UMI and count files.")
-args = parser.parse_args()
-
-# pathExtractionScript is the location to the file that has the script to extract barcode
-pathExtractionScript = os.path.join(args.pathScript,"Step1_extractBarcode","parseFastqMain.py" )
+# Define the worker function for processing each sample
+def process_sample(sample_info):
+    sample, stagger, additional_args = sample_info
+    command = ["python3", pathExtractionScript, args.experiment, sample, "-s", stagger] + additional_args
+    print(sample, stagger)
+    # print(f"Processing sample: {sample}")
+    subprocess.run(command)
 
 
-#Move to experiment directory
-os.chdir(args.experiment)
+if __name__ == "__main__":
+    # ... (your existing code to parse command line arguments)
+    parser = ArgumentParser()
+    parser.add_argument("experiment", help = "Specify the path to the experiment directory")
+    parser.add_argument("pathScript", help = "Specify the path containing the script files.", type = str)
+    parser.add_argument("--pathStaggerFile", help = "Specify the path to the file containing information on length of stagger for each sample")
+    parser.add_argument("-r", "--includeReads", help = "If specified, output additional tables with barcodes and only read counts or UMI counts. Otherwise outputs only one table with both counts", action = 'store_true')
+    parser.add_argument("-checkVector", help = "Option to check vector sequence before or on both sides of the barcode sequence.", default = "both", choices = ["both", "before"]) 
+    parser.add_argument("-barcodeLength", help = "If check_vector before specified, input here your desired barcode length. Default is 100", default = "100", type = str) 
+    parser.add_argument("-Q", "--minPhred", help = "Specify the minimum phredscore required to include a readout. Filters reads with more than 5 bases before the barcode with low phredscore.", default = "14", type = str) 
+    parser.add_argument("-e", "--excludedReads", help = "If specified, output txt.gz files containing reads excluded from the UMI and count files.")
+    args = parser.parse_args()
 
-# Including Stagger details for each sample
-if args.pathStaggerFile is not None:
-	samples = []
-	staggers = []
-	with open(args.pathStaggerFile, 'r') as file:
-		tmp = csv.reader(file)
-		for line in tmp:
-			samples.append(line[0])
-			staggers.append(str(line[1])) 
-else:
-	samples = [os.path.basename(i) for i in glob.glob("raw/*")]
-	staggers = ['0'] * len(samples)
+    # pathExtractionScript is the location to the file that has the script to extract barcode
+    pathExtractionScript = os.path.join(args.pathScript,"Step1_extractBarcode","parseFastqMain.py" )
 
-print(samples)
 
-#Format additional arguments
-additionalArguments = ["-checkVector", args.checkVector, "--minPhred", args.minPhred]
-if args.includeReads:
-	additionalArguments.extend(["--includeReads"])
-if args.checkVector == "before":
-	additionalArguments.extend(["-barcodeLength", args.barcodeLength])
-if args.excludedReads == "True":
-	additionalArguments.append(["--excludedReads"])
+    #Move to experiment directory
+    os.chdir(args.experiment)
 
-#Extract barcode, UMI and read counts for each sample file
-#Extract barcode for each sample file
-for index, i in enumerate(samples):
-	command = ["python3", pathExtractionScript, args.experiment, i, "-s", staggers[index]] + additionalArguments
-	print(command)
-	subprocess.run(command)
+    # Including Stagger details for each sample
+    if args.pathStaggerFile is not None:
+        samples = []
+        staggers = []
+        with open(args.pathStaggerFile, 'r') as file:
+            tmp = csv.reader(file)
+            for line in tmp:
+                samples.append(line[0])
+                staggers.append(str(line[1])) 
+    else:
+        samples = [os.path.basename(i) for i in glob.glob("raw/*")]
+        staggers = ['0'] * len(samples)
 
+    print(samples)
+
+    #Format additional arguments
+    additionalArguments = ["-checkVector", args.checkVector, "--minPhred", args.minPhred]
+    if args.includeReads:
+        additionalArguments.extend(["--includeReads"])
+    if args.checkVector == "before":
+        additionalArguments.extend(["-barcodeLength", args.barcodeLength])
+    if args.excludedReads == "True":
+        additionalArguments.append(["--excludedReads"])
+
+    # Create a list of sample information tuples
+    sample_info_list = [(sample, stagger, additionalArguments) for sample, stagger in zip(samples, staggers)]
+
+    # Number of worker processes to use (adjust as needed)
+    num_processes = multiprocessing.cpu_count()
+
+    # Create a multiprocessing pool
+    with multiprocessing.Pool(num_processes) as pool:
+        # Distribute the work across processes for each sample
+        pool.map(process_sample, sample_info_list)
+
+    print("All samples processed.")
