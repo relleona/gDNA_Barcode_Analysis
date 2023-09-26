@@ -13,7 +13,6 @@ parser.add_argument("excludeReads", help = "If true, output txt.gz files contain
 
 args = parser.parse_args()
 
-#python3 /home/mzo5929/gDNA_Barcode_Extraction/Step0_SampleReorganisation/BaseSpaceSampleOrganisation.py
 pathEnvelope = os.path.join(args.pathScript, "Step1_extractBarcode","Envelope.py" )
 command = ["python3", pathEnvelope, args.pathExperiment, args.pathScript, "--pathStaggerFile", args.pathStaggerFile, "-r", "-checkVector", args.checkVector,"-barcodeLength", args.barcodeLength, "-Q",args.minPhred ,"-e", args.excludeReads]
 subprocess.call(command)
