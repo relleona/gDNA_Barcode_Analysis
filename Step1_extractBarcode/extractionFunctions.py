@@ -126,7 +126,7 @@ def count_read_UMI(barcode_dictionary):
 	tot_UMI = 0
 	for i in barcode_dictionary:
 		new_dict[i] = (sum(Counter(barcode_dictionary[i][1:]).values()), len(Counter(barcode_dictionary[i][1:]).keys()))
-		tot_UMI += new_dict[i]
+		tot_UMI += new_dict[i][0]
 	return new_dict, tot_UMI
 
 def writeOutFileBarcodeCounts(barcode_dict_summary, outFileName):
