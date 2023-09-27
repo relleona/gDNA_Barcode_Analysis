@@ -123,9 +123,11 @@ def count_read_UMI(barcode_dictionary):
     Output is dictionary with the latter as the key and the former as the associated values
     """
 	new_dict = {}
+	tot_UMI = 0
 	for i in barcode_dictionary:
 		new_dict[i] = (sum(Counter(barcode_dictionary[i][1:]).values()), len(Counter(barcode_dictionary[i][1:]).keys()))
-	return new_dict
+		tot_UMI += new_dict[i]
+	return new_dict, tot_UMI
 
 def writeOutFileBarcodeCounts(barcode_dict_summary, outFileName):
 	"""Function to write reads counts and UMIs associated with each barcode

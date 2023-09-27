@@ -100,7 +100,7 @@ if args.excludedReads == True:
 	if args.checkVector == "both":
 		writeOutFileBadSeqRecord(missingAfterBarcode, outFileMissingAfterBarcode)
     
-barcode_counts_dict = count_read_UMI(barcode_dict)                  
+barcode_counts_dict, UMI_counts = count_read_UMI(barcode_dict)                  
     
 #Writing out barcode and associated read/UMI counts to file. 
 if args.includeReads:
@@ -121,7 +121,7 @@ with open(summary_file, "w") as summary:
 	summary.write("Number of reads having bad Q Score {}\n".format(len(badQscore)))
 	summary.write("Number of reads having bad barcode ('AAAA,''TTTT,' 'GGGG,' 'CCCC' ) {}\n".format(len(badBarcode)))
 	summary.write("Number of reads having bad length {}\n".format(len(badLength)))
-	summary.write("Length of UMI dictionary:{}\n".format(str(len(barcode_counts_dict))))
+	summary.write("Length of UMI dictionary:{}\n".format(str(UMI_counts)))
 
 
 print("Finished parsing Sample {}".format(args.sampleName))
