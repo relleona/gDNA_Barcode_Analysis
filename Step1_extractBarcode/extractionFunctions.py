@@ -20,10 +20,10 @@ def parseBarcode_both(inFilename, staggerLength, barcodeLength, minQuality_Phred
 
 	vectorBeforeBarcode = re.compile(r'(?e)(TCGACTAAACGCGCTACTTGAT){e<=4}') #vector primer site as reg expression. Allow up to 4 mismatches. Less than 4 errors - including deletion, insertion and substitution
 	vectorAfterBarcode = re.compile(r'(?e)(?r)(ATCCTACTTGTACAGCTCGT){e<=5}') #vector sequence after barcode as reg expression. Allow up to 5 mismatches and search from end of string first. ***What determines these numbers?
+	tot_reads = 0
 	for fastQ_file in inFilename: #Loop over all fastQ files/lanes associated with each sample
 		with gzip.open(fastQ_file, 'rt') as fastq:
 			print("Started with file:{}".format(fastQ_file))
-			tot_reads = 0
 			for seq_record in FastqGeneralIterator(fastq): 
 				tot_reads +=1
 			#Uses BioPythons FastqGeneralIterator to parse each read.
@@ -69,9 +69,9 @@ def parseBarcode_before(inFileNames, staggerLength, barcodeLength, minPhred):
 
 	vectorBeforeBarcode = re.compile(r'(?e)(TCGACTAAACGCGCTACTTGAT){e<=4}') #vector primer site as reg expression. Allow up to 4 mismatches. Less than 4 errors - including deletion, insertion and substitution
 	vectorAfterBarcode = re.compile(r'(?e)(?r)(ATCCTACTTGTACAGCTCGT){e<=5}') #vector sequence after barcode as reg expression. Allow up to 5 mismatches and search from end of string first. ***What determines these numbers?
+	tot_reads = 0
 	for fastQ_file in inFileNames:
 		#Loop over all fastQ files/lanes associated with each sample
-		tot_reads = 0
 		with gzip.open(fastQ_file, 'rt') as fastq:
 			for seq_record in FastqGeneralIterator(fastq): #Uses BioPythons FastqGeneralIterator to parse each read.
 				tot_reads += 1
