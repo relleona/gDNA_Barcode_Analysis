@@ -1,3 +1,4 @@
 - [ ] Make Starcode silent
+- [ ] Make a branch compatible with the new Quest interactive tool to make it easier and clearer
 - [ ] Replace print with echo statements to update Outlog
 - [x] Trial Parallelised Envelope.py and update to repo
