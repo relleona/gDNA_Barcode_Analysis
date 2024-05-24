@@ -3,11 +3,11 @@ import subprocess
 #This file contains all the modifiable variables in this analysis pipeline and no other files need to be modified for regular use. Running this file will call all the steps for the analysis. The file structure of the script must be retained to run this pipeline easily. The description for each parameters is in the documentation doc.
 
 parameters = {
-    "pathScript": "/home/keerthana/Goyal_Lab/FateMapPipeline_Ubuntu/gDNA_Barcode_Extraction/",
-    "pathExperimentFolder": "/home/keerthana/Goyal_Lab/FateMapPipeline_Ubuntu/TimeMachine_Keerthana_code/Subia_Dataset",
+    "pathScript": "path/to/folder/containing/this/file",
+    "pathExperimentFolder": "path/to/dataset",
 
     "step1ExtractBarcode": {
-        "staggerFile": "/home/keerthana/Goyal_Lab/FateMapPipeline_Ubuntu/TimeMachine_Keerthana_code/Subia_Dataset/Subia_dataset_staggerList.csv",
+        "staggerFile": "path/to/stagger/file.csv",
         "checkVector": "before",
         "barcodeLength": "90",
         "minPhred": "14",
@@ -15,7 +15,7 @@ parameters = {
     },
 
     "step2LvHistogramMultipleSamples": {
-        "sampleArray": ["SA2-037_1", "SA2-037_2", "SA2-037_3"],
+        "sampleArray": ["S1", "S2", "S3"],
         "lvHistogramFraction": "partial",
         "lvHistogramLength": "50"
     },
@@ -27,7 +27,7 @@ parameters = {
         "lengthStarcode": "50",
         "distanceStarcode": "8",
         "threadsStarcode": "4",
-        "sampleArrayStarcode": ["Multiple_Samples"]
+        "sampleArrayStarcode": ["S1", "S2", "S3"]
     }
 }
 #####################################################################################################################################

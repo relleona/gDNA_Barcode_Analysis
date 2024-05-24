@@ -16,5 +16,5 @@ eval "$(conda shell.bash hook)"
 conda activate Barcode_extraction
 
 #Code to run the overall python script for the pipeline: This is the file where you modified all the inputs.
-python3 /home/keerthana/Goyal_Lab/FateMapPipeline_Ubuntu/gDNA_Barcode_Extraction/experimentIDInputRun.py
+python3 /home/keerthana/Goyal_Lab/FateMapPipeline_Ubuntu/gDNA_Barcode_Extraction/templateInputFullRun.py
 
