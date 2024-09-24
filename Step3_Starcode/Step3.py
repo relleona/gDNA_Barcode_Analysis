@@ -28,4 +28,3 @@ subprocess.call(commandLvHistogramFinal)
 
 
 
-

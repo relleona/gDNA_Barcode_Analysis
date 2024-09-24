@@ -39,6 +39,7 @@ parser.add_argument("-r", "--includeReads", help = "If specified, output additio
 parser.add_argument("-checkVector", help = "Option to check vector sequence before or on both sides of the barcode sequence.", default = "both", choices = ["both", "before"]) 
 parser.add_argument("-barcodeLength", help = "If checkVector before specified, input here your desired barcode length.", type = int) 
 parser.add_argument("-Q", "--minPhred", help = "Specify the minimum phredscore required to include a readout. Filters reads with more than 5 bases before the barcode with low phredscore.", default = 14, type = int) 
+parser.add_argument("-a", "--asciioffset", help = "If PhredScore has letters, ascii offset will be 33, otherwise it will be 64. Most recent version of Illumina uses Phred Score of 33. ", default = 33, type = int)
 parser.add_argument("-e", "--excludedReads", help = "If specified, output txt.gz files containing reads excluded from the UMI and count files.", action = 'store_true')
 args = parser.parse_args()
 
@@ -73,6 +74,7 @@ outFileBadPhred = outFilePrefix + "_badPhred.gz"
 
 staggerLength = args.stagger
 minPhred = args.minPhred
+asciioffset = args.asciioffset
 
 # Moving to sample directory 
 os.chdir(os.path.join(experimentDirectory, "raw", args.sampleName))
@@ -83,9 +85,9 @@ print("Parsing sample {}".format(args.sampleName))
 inFileNames = glob.glob("*fastq*")
 
 if args.checkVector == "both":
-	barcode_dict, missingBeforeBarcode, missingAfterBarcode, badQscore, badLength, badBarcode, tot_reads = parseBarcode_both(inFileNames, args.stagger, args.barcodeLength, minPhred)
+	barcode_dict, missingBeforeBarcode, missingAfterBarcode, badQscore, badLength, badBarcode, tot_reads = parseBarcode_both(inFileNames, args.stagger, args.barcodeLength, minPhred, asciioffset)
 elif args.checkVector == "before":
-	barcode_dict, missingBeforeBarcode, badQscore, badLength, badBarcode, tot_reads = parseBarcode_before(inFileNames, args.stagger, args.barcodeLength, minPhred)
+	barcode_dict, missingBeforeBarcode, badQscore, badBarcode, tot_reads = parseBarcode_before(inFileNames, args.stagger, args.barcodeLength, minPhred, asciioffset)
 
 
 #Writing out barcode and associated phredscore and UMIs to file. 
@@ -114,15 +116,13 @@ else:
 summary_file = args.sampleName + "_summary.txt"
 with open(summary_file, "w") as summary:
 	summary.write("Number of reads parsed is {}\n".format(tot_reads))
-	summary.write("Length of dictionary is {}\n".format(len(barcode_dict)))
-	summary.write("Number of reads missing sequence before barcode is {}\n".format(len(missingBeforeBarcode)))
+	summary.write("The number of unique barcode is {}\n".format(len(barcode_dict)))
+	summary.write("Number of reads missing sequence (GFP) before barcode is {}\n".format(len(missingBeforeBarcode)))
 	if args.checkVector == "both":
-		summary.write("Number of reads missing sequence after barcode is {}\n".format(len(missingAfterBarcode)))
+		summary.write("Number of reads missing sequence (GFP) after barcode is {}\n".format(len(missingAfterBarcode)))
 	summary.write("Number of reads having bad Q Score {}\n".format(len(badQscore)))
 	summary.write("Number of reads having bad barcode ('AAAA,''TTTT,' 'GGGG,' 'CCCC' ) {}\n".format(len(badBarcode)))
-	summary.write("Number of reads having bad length {}\n".format(len(badLength)))
-	summary.write("Length of UMI dictionary:{}\n".format(str(UMI_counts)))
-
+	summary.write("Total number of reads is:{}\n".format(str(UMI_counts)))
 
 print("Finished parsing Sample {}".format(args.sampleName))
 

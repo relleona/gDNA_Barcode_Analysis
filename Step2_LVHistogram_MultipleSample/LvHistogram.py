@@ -33,11 +33,19 @@ parser.add_argument("-inputLength", help= "If you have chosen partial in the inp
 args = parser.parse_args()
 
 experimentDirectory = args.pathExperiment
+#Move into current directory
 os.chdir('..')
+#Move into analyzed directory
 os.chdir(os.path.join(experimentDirectory, "analyzed", args.sampleName)) #identifying the input file location and moving to it
+
+#Make LV_Analysus and matrix 
 if not os.path.exists("LV_Analysis"):
     os.makedirs("LV_Analysis")
 
+if not os.path.exists(os.path.join("LV_Analysis", "matrix")):
+    os.makedirs(os.path.join("LV_Analysis", "matrix"))
+
+#Move to extractdedBarcodeData directory
 os.chdir(os.path.join("extractedBarcodeData")) 
 
 # Assigning the length of substring to determine LV distance 
@@ -117,7 +125,7 @@ del(Barcode)
 gc.collect()
 
 # Calculate the string distance matrix using Levenshtein distance (edit distance)
-print("Beginning to find Levenshtein distance for the {} Barcode".format(args.inputFraction))
+print("Beginning to find Levenshtein distance for the {} Barcode for sample {}".format(args.inputFraction, args.sampleName))
 
 # Sample 1
 pairs_1 = itertools.product(Sample_1, Sample_1)
@@ -125,6 +133,10 @@ pairs_1 = [(pair[0], pair[1]) for pair in pairs_1 if pair[0] != pair[1]]
 matrix_1 = [Levenshtein.distance(pair[0], pair[1]) for pair in pairs_1]
 del(pairs_1)
 matrix_1 = np.array(matrix_1)
+# Saving the matrix to reproduce data 
+pd.DataFrame(matrix_1).to_csv(os.path.join("LV_Analysis", "matrix", "sample_1.csv"), index=False, header=False)
+# Calculating mean 
+sample1_mean = sum(matrix_1) / len(matrix_1)
 del Sample_1
 gc.collect()
 print("Done for Sampling 1")
@@ -135,6 +147,8 @@ pairs_2 = [(pair[0], pair[1]) for pair in pairs_2 if pair[0] != pair[1]]
 matrix_2 = [Levenshtein.distance(pair[0], pair[1]) for pair in pairs_2]
 del(pairs_2)
 matrix_2 = np.array(matrix_2)
+pd.DataFrame(matrix_2).to_csv(os.path.join("LV_Analysis", "matrix", "sample_2.csv"), index=False, header=False)
+sample2_mean = sum(matrix_2) / len(matrix_2)
 del Sample_2
 gc.collect()
 print("Done for Sampling 2")
@@ -145,6 +159,8 @@ pairs_3 = [(pair[0], pair[1]) for pair in pairs_3 if pair[0] != pair[1]]
 matrix_3 = [Levenshtein.distance(pair[0], pair[1]) for pair in pairs_3]
 del(pairs_3)
 matrix_3 = np.array(matrix_3)
+pd.DataFrame(matrix_3).to_csv(os.path.join("LV_Analysis", "matrix", "sample_3.csv"), index=False, header=False)
+sample3_mean = sum(matrix_3) / len(matrix_3)
 del Sample_3
 gc.collect()
 print("Done for Sampling 3")
@@ -158,36 +174,66 @@ pdf = PdfPages(pdf_filename)
 
 x_tick = np.arange(0, max(np.max(matrix_1), np.max(matrix_2), np.max(matrix_3)), 4) 
 
-plt.figure(figsize=(6, 4))
-n_1, bins_1, patches_1 = plt.hist(matrix_1, np.max(matrix_1), density = True)
-plt.title('Sample 1')
-plt.yscale('log')
-plt.xlabel('LV Distance')
-plt.xticks(x_tick)
-plt.ylabel('Fraction')
-pdf.savefig()
-plt.close()
+# plt.figure(figsize=(6, 4))
+# n_1, bins_1, patches_1 = plt.hist(matrix_1, np.max(matrix_1), density = True)
+# plt.title('Sample 1')
+# # plt.yscale('log')
+# plt.xlabel('LV Distance')
+# plt.xticks(x_tick)
+# plt.ylabel('Fraction')
+# pdf.savefig()
+# plt.close()
 
-plt.figure(figsize=(6, 4))
-n_2, bins_2, patches_2 = plt.hist(matrix_2, np.max(matrix_2), density = True)
-plt.title('Sample 2')
-plt.xticks(x_tick)
-plt.yscale('log')
-plt.xlabel('LV Distance')
-plt.ylabel('Fraction')
-pdf.savefig()
-plt.close()
+# plt.figure(figsize=(6, 4))
+# n_2, bins_2, patches_2 = plt.hist(matrix_2, np.max(matrix_2), density = True)
+# plt.title('Sample 2')
+# plt.xticks(x_tick)
+# # plt.yscale('log')
+# plt.xlabel('LV Distance')
+# plt.ylabel('Fraction')
+# pdf.savefig()
+# plt.close()
 
-plt.figure(figsize=(6, 4))
-n_3, bins_3, patches_3 = plt.hist(matrix_3, np.max(matrix_3), density = True)
-plt.title('Sample 3')
-plt.xticks(x_tick)
-plt.yscale('log')
-plt.xlabel('LV Distance')
-plt.ylabel('Fraction')
-pdf.savefig()
-plt.close()
-pdf.close()
+# plt.figure(figsize=(6, 4))
+# n_3, bins_3, patches_3 = plt.hist(matrix_3, np.max(matrix_3), density = True)
+# plt.title('Sample 3')
+# plt.xticks(x_tick)
+# # plt.yscale('log')
+# plt.xlabel('LV Distance')
+# plt.ylabel('Fraction')
+# pdf.savefig()
+# plt.close()
+# pdf.close()
 
+# Function to create and save a histogram
+def create_histogram(matrix, title, pdf):
+    plt.figure(figsize=(6, 4))
+    num_bins = np.max(matrix)  # Using square root rule for bin count
+    plt.hist(matrix, bins=num_bins, density=True,linewidth=15)
+    plt.title(title)
+    # plt.yscale('log')
+    plt.xlabel('LV Distance')
+    plt.ylabel('Fraction')
+    plt.xticks(x_tick)
+    plt.tight_layout()
+    pdf.savefig()
+    plt.close()
+
+# Create and save the plots
+with PdfPages(pdf_filename) as pdf:
+    create_histogram(matrix_1, 'Sample 1', pdf)
+    create_histogram(matrix_2, 'Sample 2', pdf)
+    create_histogram(matrix_3, 'Sample 3', pdf)
+
+print(f"PDF saved as {pdf_filename}")
+
+#Keep all the mean data saved 
+summary_file = args.sampleName + "_meandistance.txt"
+with open(summary_file, "w") as summary:
+    summary.write("Sample 1 mean {}\n".format(sample1_mean))
+    summary.write("Sample 2 mean {}\n".format(sample2_mean))
+    summary.write("Sample 3 mean {}\n".format(sample3_mean))
+
+print(summary)
 
 

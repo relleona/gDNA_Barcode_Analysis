@@ -43,6 +43,7 @@ else:
 	outFileDirectory = os.path.join(args.pathExperiment, "analyzed", args.sampleName, 'starcode')
 	if not os.path.exists(outFileDirectory):
 		os.makedirs(outFileDirectory)
+	
 	for i in lengths:
 		samplePath = os.path.join(args.pathExperiment, "analyzed", args.sampleName, '{}_Barcode_{}.txt'.format(args.sampleName, i))
 		outfilePath = os.path.join(args.pathExperiment, "analyzed", args.sampleName, 'starcode', '{}_Barcode{}_d{}.txt'.format(args.sampleName, i, args.distance))
@@ -51,3 +52,28 @@ else:
 
 
 
+# for i in lengths:
+#     samplePath = os.path.join(args.pathExperiment, "analyzed", args.sampleName, 'LV_Analysis/{}_Barcode_{}.txt'.format(args.sampleName, i))
+#     outfilePath = os.path.join(args.pathExperiment, "analyzed", args.sampleName, 'starcode', '{}_Barcode{}_d{}.txt'.format(args.sampleName, i, args.distance))
+    
+#     print(f"Sample path: {samplePath}")
+#     print(f"Output path: {outfilePath}")
+    
+#     if not os.path.exists(samplePath):
+#         print(f"Error: Input file not found: {samplePath}")
+#         continue
+    
+#     starcodeCommand = [starcodeLocation, '-d', args.distance, '-t', threads, '-i', samplePath, "--seq-id", '-o', outfilePath]
+    
+#     print(f"Running command: {' '.join(starcodeCommand)}")
+    
+#     try:
+#         result = subprocess.run(starcodeCommand, check=True, capture_output=True, text=True)
+#         print(f"Starcode output: {result.stdout}")
+#     except subprocess.CalledProcessError as e:
+#         print(f"Error running starcode: {e}")
+#         print(f"Starcode stderr: {e.stderr}")
+#     except Exception as e:
+#         print(f"Unexpected error: {e}")
+
+# print("Script completed.")

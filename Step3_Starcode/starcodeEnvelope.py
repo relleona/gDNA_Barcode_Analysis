@@ -37,14 +37,14 @@ if(args.combined == "yes"):
 	subprocess.call(processing)
 
 else: 
-		samples = args.sampleArray.split(",")
-		#Run starcode on all sample files with same settings
-		for index, sample in enumerate(samples):
-			command = ["python3", starcodeScriptPath, args.pathExperiment, args.pathScript,"no", sample, "-d", str(args.distance), "-thread", str(args.thread)]
-			print(command)
-			subprocess.call(command)
-			processing = ["python3", processingScriptPath, args.pathExperiment,"no", sample,"-d", str(args.distance), "-length",str(args.length)]
-			subprocess.call(processing)
+	samples = args.sampleArray.split(",")
+	#Run starcode on all sample files with same settings
+	for index, sample in enumerate(samples):
+		command = ["python3", starcodeScriptPath, args.pathExperiment, args.pathScript,"no", sample, "-d", str(args.distance), "-thread", str(args.thread)]
+		print(command)
+		subprocess.call(command)
+		processing = ["python3", processingScriptPath, args.pathExperiment,"no", sample,"-d", str(args.distance), "-length",str(args.length)]
+		subprocess.call(processing)
 
 
 			
