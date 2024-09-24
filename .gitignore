@@ -1,7 +1,8 @@
 #Ignore these files
-*.py
 *.sh
 *.pyc
+*.ipynb
 # Allow Python files in subdirectories
+!*.py
 !/*.py
 !/*.sh
