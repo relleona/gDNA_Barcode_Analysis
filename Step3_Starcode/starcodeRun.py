@@ -16,10 +16,14 @@ import subprocess
 parser = ArgumentParser()
 parser.add_argument("pathExperiment", help = "Specify the path to the experiment directory")
 parser.add_argument("pathScript", help = "Specify the path to the script containing directory")
-parser.add_argument("combined", help = "If combines file of multiple samples has to be run, yes; otherwise, no", choices = ["yes", "no"])
+# parser.add_argument("combined", help = "If combines file of multiple samples has to be run, yes; otherwise, no", choices = ["yes", "no"])
 parser.add_argument("sampleName", help = "Specify the name of sample directory containing the text files of barcodes")
-parser.add_argument("-d", "--distance", help = "Specify the Levenshtein distance for clustering/merging sequences", type = str, default = 8) 
+parser.add_argument("-d", "--distance", help = "Specify the Levenshtein distance for clustering/merging sequences", type = str, default = "8") 
 parser.add_argument("-thread", help = "Number of threads to use for Starcode", default='4',type = str )
+parser.add_argument("-length", help = "Length of barcode to be used for analysis", default="50",type = str )
+parser.add_argument("-Fraction",help = "Specify if its running starcode for the full barcode or for a partial part. Options: full, partial", choices=["full", "partial"], default="full")
+
+
 args = parser.parse_args()
 
 #The location where starcode is compiled and stored
@@ -28,27 +32,52 @@ starcodeLocation = os.path.join(args.pathScript,"Step3_Starcode","starcode","sta
 threads = args.thread
 os.chdir("..")
 
-lengths = [30,40,50]
-if(args.combined == "no"):
-	outFileDirectory = os.path.join(args.pathExperiment, "analyzed", args.sampleName, 'starcode')		
-	if not os.path.exists(outFileDirectory):
-			os.makedirs(outFileDirectory)
+# These are the lengths that are normally used or initiated
+lengths = ["30","40","50"]
 
-	for i in lengths:
+# These are the input length  that is not within the measurements mentioned above
+if int(args.length) not in lengths: 
+	if args.Fraction =="full": 
+		lengths.append("full")
+	else:
+		lengths.append(str(args.length))
+
+# The outputfile of the data 
+outFileDirectory = os.path.join(args.pathExperiment, "analyzed", args.sampleName, 'starcode')		
+if not os.path.exists(outFileDirectory):
+	os.makedirs(outFileDirectory)
+
+# Starcode should be done on every one of the different lengths 
+for i in lengths:
+	# If the length that is used is the entire length of the barcode, it will be titled full instead of the length 
+	if i =="full": 
+		samplePath = os.path.join(args.pathExperiment, "analyzed", args.sampleName, 'LV_Analysis/{}_Barcode_full.txt'.format(args.sampleName))
+		outfilePath = os.path.join(args.pathExperiment, "analyzed", args.sampleName, 'starcode', '{}_Barcodefull_d{}.txt'.format(args.sampleName, args.distance))
+
+	else: 
 		samplePath = os.path.join(args.pathExperiment, "analyzed", args.sampleName, 'LV_Analysis/{}_Barcode_{}.txt'.format(args.sampleName, i))
 		outfilePath = os.path.join(args.pathExperiment, "analyzed", args.sampleName, 'starcode', '{}_Barcode{}_d{}.txt'.format(args.sampleName, i, args.distance))
-		starcodeCommand = [starcodeLocation, '-d', args.distance, '-t', threads, '-i', samplePath, "-s", "--seq-id", '-o', outfilePath]
-		subprocess.run(starcodeCommand)
-else:
-	outFileDirectory = os.path.join(args.pathExperiment, "analyzed", args.sampleName, 'starcode')
-	if not os.path.exists(outFileDirectory):
-		os.makedirs(outFileDirectory)
+
+	# Command includes location, distance to be collapsed, threads used, path to barcode, path to output 
+	starcodeCommand = [starcodeLocation, '-d', args.distance, '-t', threads, '-i', samplePath, "-s", "--seq-id", '-o', outfilePath]
+	subprocess.run(starcodeCommand)
+
+
+
+
+
+
+
+# else:
+# 	outFileDirectory = os.path.join(args.pathExperiment, "analyzed", args.sampleName, 'starcode')
+# 	if not os.path.exists(outFileDirectory):
+# 		os.makedirs(outFileDirectory)
 	
-	for i in lengths:
-		samplePath = os.path.join(args.pathExperiment, "analyzed", args.sampleName, '{}_Barcode_{}.txt'.format(args.sampleName, i))
-		outfilePath = os.path.join(args.pathExperiment, "analyzed", args.sampleName, 'starcode', '{}_Barcode{}_d{}.txt'.format(args.sampleName, i, args.distance))
-		starcodeCommand = [starcodeLocation, '-d', args.distance, '-t', threads, '-i', samplePath, "-s", "--seq-id", '-o', outfilePath]
-		subprocess.run(starcodeCommand)		
+# 	for i in lengths:
+# 		samplePath = os.path.join(args.pathExperiment, "analyzed", args.sampleName, '{}_Barcode_{}.txt'.format(args.sampleName, i))
+# 		outfilePath = os.path.join(args.pathExperiment, "analyzed", args.sampleName, 'starcode', '{}_Barcode{}_d{}.txt'.format(args.sampleName, i, args.distance))
+# 		starcodeCommand = [starcodeLocation, '-d', args.distance, '-t', threads, '-i', samplePath, "-s", "--seq-id", '-o', outfilePath]
+# 		subprocess.run(starcodeCommand)		
 
 
 
