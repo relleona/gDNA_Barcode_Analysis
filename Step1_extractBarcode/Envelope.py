@@ -26,11 +26,15 @@ import glob
 import multiprocessing
 
 # Define the worker function for processing each sample
-def process_sample(sample_info):
+def process_sample(sample_info, path_extraction_script, experiment_path):
+
+    print(f"sample_info: {sample_info}")
+    sample, stagger, *additional_args = sample_info
+    print(f"sample: {sample}, stagger: {stagger}, additional_args: {additional_args}")
     sample, stagger, additional_args = sample_info
-    command = ["python3", pathExtractionScript, args.experiment, sample, "-s", stagger] + additional_args
-    # print(f"Processing sample: {sample}")
-    subprocess.run(command)
+    command = ["python3", path_extraction_script, experiment_path, sample, "-s", stagger] + additional_args
+    print(command)
+    subprocess.call(command)
 
 
 if __name__ == "__main__":
@@ -43,7 +47,8 @@ if __name__ == "__main__":
     parser.add_argument("-checkVector", help = "Option to check vector sequence before or on both sides of the barcode sequence.", default = "both", choices = ["both", "before"]) 
     parser.add_argument("-barcodeLength", help = "If check_vector before specified, input here your desired barcode length. Default is 100", default = "100", type = str) 
     parser.add_argument("-Q", "--minPhred", help = "Specify the minimum phredscore required to include a readout. Filters reads with more than 5 bases before the barcode with low phredscore.", default = "14", type = str) 
-    parser.add_argument("-e", "--excludedReads", help = "If specified, output txt.gz files containing reads excluded from the UMI and count files.")
+    parser.add_argument("-a", "--asciioffset", help = "If PhredScore has letters, ascii offset will be 33, otherwise it will be 64. Most recent version of Illumina uses Phred Score of 33. ", default = "33", type = str)
+    parser.add_argument("-e","--excludeReads", help = "If true, output txt.gz files containing reads excluded from the UMI and count files", default = "False", choices = ["True", "False"])
     args = parser.parse_args()
 
     # pathExtractionScript is the location to the file that has the script to extract barcode
@@ -69,13 +74,13 @@ if __name__ == "__main__":
     print(samples)
 
     #Format additional arguments
-    additionalArguments = ["-checkVector", args.checkVector, "--minPhred", args.minPhred]
+    additionalArguments = ["-checkVector", args.checkVector, "--minPhred", args.minPhred, "--asciioffset", args.asciioffset]
     if args.includeReads:
         additionalArguments.extend(["--includeReads"])
-    if args.checkVector == "before":
+    if args.checkVector == "both":
         additionalArguments.extend(["-barcodeLength", args.barcodeLength])
-    if args.excludedReads == "True":
-        additionalArguments.append(["--excludedReads"])
+    if args.excludeReads == "True":
+        additionalArguments.extend(["--excludeReads"])
 
     # Create a list of sample information tuples
     sample_info_list = [(sample, stagger, additionalArguments) for sample, stagger in zip(samples, staggers)]
@@ -86,6 +91,6 @@ if __name__ == "__main__":
     # Create a multiprocessing pool
     with multiprocessing.Pool(num_processes) as pool:
         # Distribute the work across processes for each sample
-        pool.map(process_sample, sample_info_list)
+        pool.starmap(process_sample, [(info, pathExtractionScript, args.experiment) for info in sample_info_list])
 
     print("All samples processed.")

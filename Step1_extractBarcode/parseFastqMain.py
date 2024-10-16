@@ -17,6 +17,11 @@ Command to run this file: python3 <path to parseFastqMain.py> <path to Experimen
 
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 # Importing necessary packages and functions
+
+#!/opt/anaconda3/envs/Barcode_extraction/bin/python
+
+# import sys
+# print(sys.path)
 from Bio.SeqIO.QualityIO import FastqGeneralIterator
 import regex as re
 from collections import Counter
@@ -28,6 +33,12 @@ from extractionFunctions import parseBarcode_both,parseBarcode_before,\
 													 writeOutFileBarcodeReadCounts,writeOutFileUMIs,\
 													 count_read_UMI, writeOutFileBarcodeUMICounts
 
+
+def check_file_created(filename):
+    if os.path.exists(filename):
+        print(f"File created successfully: {filename}")
+    else:
+        print(f"Failed to create file: {filename}")
 
 #Command line parser
 parser = ArgumentParser()
@@ -60,7 +71,6 @@ if args.checkVector == 'both':
 	outFileCounts = outFilePrefix + "_counts.gz"
 	outFileUMICounts = outFilePrefix + "_UMICountsOnly.gz"
 	outFileReadCounts = outFilePrefix + "_readCountsOnly.gz"
-	outFileMissingAfterBarcode = outFilePrefix + "_missingAfterBarcode.gz"
 elif args.checkVector == 'before':
 	outFileUMI = outFilePrefix + "_UMIs_liberal.gz"
 	outFileCounts = outFilePrefix + "_counts_liberal.gz"
@@ -68,13 +78,16 @@ elif args.checkVector == 'before':
 	outFileReadCounts = outFilePrefix + "_readCountsOnly_liberal.gz"
 
 outFileMissingBeforeBarcode = outFilePrefix + "_missingBeforeBarcode.gz"
-outFileBadBarcode = outFilePrefix + "_badBarcode.gz"
-
+outFileMissingAfterBarcode = outFilePrefix + "_missingAfterBarcode.gz"
+outFileBadLength = outFilePrefix + "_badLength.gz"
 outFileBadPhred = outFilePrefix + "_badPhred.gz"
-
 staggerLength = args.stagger
-minPhred = args.minPhred
-asciioffset = args.asciioffset
+minPhred = int(args.minPhred)
+print(minPhred)
+asciioffset = int(args.asciioffset)
+print(asciioffset)
+barcodeLength = int(args.barcodeLength)
+print(barcodeLength)
 
 # Moving to sample directory 
 os.chdir(os.path.join(experimentDirectory, "raw", args.sampleName))
@@ -84,10 +97,11 @@ print("Parsing sample {}".format(args.sampleName))
 
 inFileNames = glob.glob("*fastq*")
 
+#Filter the barcode
 if args.checkVector == "both":
-	barcode_dict, missingBeforeBarcode, missingAfterBarcode, badQscore, badLength, badBarcode, tot_reads = parseBarcode_both(inFileNames, args.stagger, args.barcodeLength, minPhred, asciioffset)
+	barcode_dict, missingBeforeBarcode, missingAfterBarcode, badQscore, badLength, badBarcode, tot_reads = parseBarcode_both(inFileNames, args.stagger, barcodeLength, minPhred, asciioffset)
 elif args.checkVector == "before":
-	barcode_dict, missingBeforeBarcode, badQscore, badBarcode, tot_reads = parseBarcode_before(inFileNames, args.stagger, args.barcodeLength, minPhred, asciioffset)
+	barcode_dict, missingBeforeBarcode, badQscore, badLength, badBarcode, tot_reads = parseBarcode_before(inFileNames, args.stagger, barcodeLength, minPhred, asciioffset)
 
 
 #Writing out barcode and associated phredscore and UMIs to file. 
@@ -97,21 +111,30 @@ writeOutFileUMIs(barcode_dict, outFileUMI)
 # If excluded reads are true, bad Barcodes are also written with each issue in a separate file
 if args.excludedReads == True:
 	writeOutFileBadSeqRecord(missingBeforeBarcode, outFileMissingBeforeBarcode)
+	check_file_created(outFileMissingBeforeBarcode)
 	writeOutFileBadSeqRecord(badQscore, outFileBadPhred)
-	writeOutFileBadSeqRecord(badBarcode, outFileBadBarcode)
+	check_file_created(outFileBadPhred)
+	writeOutFileBadSeqRecord(badBarcode, outFileBadLength)
+	check_file_created(outFileBadLength)
 	if args.checkVector == "both":
 		writeOutFileBadSeqRecord(missingAfterBarcode, outFileMissingAfterBarcode)
-    
+		check_file_created(outFileMissingAfterBarcode)
+
 barcode_counts_dict, UMI_counts = count_read_UMI(barcode_dict)                  
     
 #Writing out barcode and associated read/UMI counts to file. 
 if args.includeReads:
 	writeOutFileBarcodeUMICounts(barcode_counts_dict,outFileUMICounts)
+	check_file_created(outFileUMICounts)
 	writeOutFileBarcodeCounts(barcode_counts_dict, outFileCounts)
+	check_file_created(outFileCounts)
 	writeOutFileBarcodeReadCounts(barcode_counts_dict, outFileReadCounts)
+	check_file_created(outFileReadCounts)
 else:
 	writeOutFileBarcodeCounts(barcode_counts_dict, outFileCounts)
+	check_file_created(outFileCounts)
 
+print("Writing Summary for {}".format(args.sampleName))
 # Writing the summary file for this sample
 summary_file = args.sampleName + "_summary.txt"
 with open(summary_file, "w") as summary:
