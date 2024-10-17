@@ -159,25 +159,27 @@ def parseBarcode_both(inFileName, staggerLength, barcodeLength, minQuality_Phred
 			VBA_match, VBA_position, VBA_errors = find_best_match(seq_record[1][find_after_barcode:], vectorAfterBarcode, 5, "after")
 
 			if VBB_match and VBA_match:
+				#  This checks if 5 or more positions in the matched region have a Phred score < minPhred within the GFP primer site.
 				if sum([ord(i) - asciioffset < minQuality_Phred for i in seq_record[2][VBB_position[0]:VBB_position[1]]]) >= 5:
-					badQscore.append(seq_record)
-				if sum([ord(i) - asciioffset < minQuality_Phred for i in seq_record[2][VBA_position[0]:VBA_position[1]]]) >= 5:
-					badQscore.append(seq_record)
-				# elif (VBB_position[1] - staggerLength) > 30 or (VBB_position[0] - staggerLength) < 4:
-				# 	badLength.append(seq_record)
+					badQscore.append(seq_record) #Skip reads where conditions above are not fulfilled.
+
+				# This checks for homopolymers or unknown nucleotides in the sequence.
 				elif(len(re.findall("(AAAA)", seq_record[1])) > 0 or \
 				len(re.findall("(TTTT)", seq_record[1])) > 0 or \
 				len(re.findall("(GGGG)", seq_record[1])) > 0 or \
 				len(re.findall("(CCCC)", seq_record[1])) > 0 or \
 				len(re.findall("(NN)", seq_record[1])) > 0):
 					badBarcode.append(seq_record)
+
+				# If the sequence passes all checks, this extracts the barcode and updates the barcode_dict.
 				else:
-					barcode = seq_record[1][VBB_position[1]:VBB_position[1]+ barcodeLength]
+					
+					barcode = seq_record[1][VBB_position[1]:VBB_position[1]+ barcodeLength] #recording barcode
 					if barcode not in barcode_dict:
 						barcode_dict[barcode] = [seq_record[2][VBB_position[1]:VBB_position[1]+ barcodeLength]] # record quality score 
-						barcode_dict[barcode].append(seq_record[1][0:VBB_position[0]-staggerLength]) # record sequence before stagger 
+						barcode_dict[barcode].append(seq_record[1][VBB_position[0]-staggerLength:VBB_position[0]]) # record stagger sequence
 					elif barcode in barcode_dict:
-						barcode_dict[barcode].append(seq_record[1][0:VBB_position[0]-staggerLength])
+						barcode_dict[barcode].append(seq_record[1][VBB_position[0]-staggerLength:VBB_position[0]])
 			elif VBB_match and not VBA_match:
 				missingVectorAfter.append(seq_record)
 			elif VBA_match and not VBB_match:
@@ -252,9 +254,9 @@ def parseBarcode_before(inFileName, staggerLength, barcodeLength, minPhred, asci
 					barcode = seq_record[1][position[1]:position[1] + barcodeLength] #recording barcode
 					if barcode not in barcode_dict:
 						barcode_dict[barcode] = [seq_record[2][position[1]:position[1] + barcodeLength]] # recording the quality 
-						barcode_dict[barcode].append(seq_record[1][0:position[0]-staggerLength]) # recording the values before stagger length 
+						barcode_dict[barcode].append(seq_record[1][position[0]-staggerLength:position[0]]) # recording stagger sequence, demultiplexing
 					elif barcode in barcode_dict:
-						barcode_dict[barcode].append(seq_record[1][0:position[0]-staggerLength][0:position[0]-staggerLength])
+						barcode_dict[barcode].append(seq_record[1][position[0]-staggerLength:position[0]])
 	
 			# If the vector before barcode sequence is not found, this adds the read to missingVectorBefore.
 			else:
