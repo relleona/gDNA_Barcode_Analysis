@@ -69,45 +69,60 @@ input_dir = {
     #The path to folders that will later contain the experiments 
     "exp": "/projects/b1042/GoyalLab/aleona/YG10Xbarcode/Exp3",
 
-    #Depth of subfolders within the Experiment folder above to run the job scripts for
+    #Depth of subfolders within the Main Experiment folder above to run the job scripts for
     "depth" : "1", #Default is 1 and usually its the same if the format is followed, 
 
-    #Pause to check if the organization is the way you wanted. 
-    # If you put TRUE, it will stop 
-    # If you put 10, It will pause for 10 minutes after the job is submitted
-    "Pause_to_check" : False 
-
+    #If your data is already reorganized with StaggerFile.csv, then it will just initiate the bash script in each of the Experiment folders
+    "reorganized" : True
 }
 
 parameters = {
     "step1ExtractBarcode": {
-        "checkVector": "both",
+        # If they have primers before and after barcode
+        "checkVector": "both", # choices : ["both", "before"]
+
+        # Length of the barcode 
         "barcodeLength": "100",
+        
+        # Minimum phred score 
         "minPhred": "14",
+        
+        # Specify whether to save unwanted (bad) barcodes to a separate file
+        # Set to False to save bad barcodes, True to exclude them   
         "excludedReads": "False", 
+
+        # If PhredScore has letters, ascii offset will be 33, otherwise it will be 64. 
+        # Most recent version of Illumina uses Phred Score offset of 33.
         "asciioffset": "33"
     },
 
+    # This step will make a barcode with the length that is specified and conduct an LV analysis on that length. 
     "step2LvHistogramMultipleSamples": {
-        # "sampleArray": ["S1", "S2", "S3"], 
-        "lvHistogramFraction": "partial",
+        # Will you use a part of the barcode for starcode processing or the entire thing 
+        "lvHistogramFraction": "partial", # choices : ["partial", "full"]
+
+        # If partial is specified above, what is the length of the barcode?
+        # If full is specified above, indicate the same number as barcodeLength above?
         "lvHistogramLength": "90"
     },
 
+    # Do you want to see the LV Histograms and check if you have specified the right length
     "pauseBeforeStep3": False,
 
-    "step3StarcodeLvHistogram": {
-        "combinedSample": "yes",
-        # "starcodefraction": "partial"
-        # "lengthStarcode": "50",
-        "distanceStarcode": "8",
-        # "threadsStarcode": "8",
-        # "sampleArrayStarcode": "Multiple_Samples"
+    # This step will process starcode according to the length above and the parameters below
+    "step3Starcode": {
+        # Determine how starcode will process the data
+        #   yes: Perform starcode on combined samples from one experiment (Multiple_Samples)
+        #   no: Perform starcode on separate samples from the same experiment
+        "combinedSample": "yes", # choices : ["yes", "no"]
+
+        # Distance or differences by which starcode will collapse or merge the barcode 
+        "distanceStarcode": "8", # Maximum of 8 
     }
 }
 
 bash_script ={
-    "run_bash": True,
+    "run_bash": "True",
     "quest" : "True", #Default is TRUE
  ##For creating the bash scripts in Quest
     "account":"b1042",
@@ -125,17 +140,20 @@ bash_script ={
 #####################################################################################################################################
 #Nothing needs to be modified in the entire pipeline beyond this.
 #####################################################################################################################################
-###Run Command---------------------------
-# #'
-# # Command line parser
-# parser = ArgumentParser(description="Wrapper script for FASTQ file reorganization.")
-# parser.add_argument("pathScript", help="Specify the path containing the BaseSpaceReorganization.py, in this case its Step0_2", type=str)
-# parser.add_argument("path", help="Specify the path containing the nested sample folders.", type=str)
-# parser.add_argument("--sample_sheet", help="Path to the sample sheet Excel file", required=True)
-# parser.add_argument("--primers_sheet", help="Path to the primers Excel file", required=True)
-# parser.add_argument("-exp", "--experimentfile", help="Specify the output path. If not provided, a 'Experiment' folder will be created in the input path.", type=str, required=False)
 
-# args = parser.parse_args()
+###Run Command---------------------------
+#'
+#' This function executes a shell command and handles its output and errors.
+#'
+#' @param command A list of strings representing the command to be executed.
+#'
+#' @return The standard output of the command if successful.
+#'
+#' @details The function performs the following steps:
+#'          1. Prints the command being run
+#'          2. Executes the command using subprocess.run()
+#'          3. Prints and returns the stdout if successful
+#'          4. Prints error details and exits if the command fails
 def run_command(command):
     """
     Execute a shell command and handle its output and errors.
@@ -160,17 +178,15 @@ def run_command(command):
         print(f"STDERR: {e.stderr}", file=sys.stderr)
         sys.exit(1)
 
-def extract_job_ids(stdout):
-    """
-    Extract job IDs from the output of a job submission command.
-    
-    Args:
-    stdout (str): The standard output from a job submission command.
-    
-    Returns:
-    list: A list of strings representing the extracted job IDs.
-    """
-    return [line.split()[-1] for line in stdout.split('\n') if "Submitted batch job" in line]
+# Printing this to a txt file 
+def write_main_folders_dict(output_file, main_folder_dict):
+    # print(main_folder_dict)
+    with open(output_file, "a") as file:
+        for folder_path, samples in main_folder_dict.items():
+            # Join samples with comma and space, ensure that there are no duplicates 
+            samples_string = ",".join(np.unique(samples))
+            # Write the folder path and samples to the file
+            file.write(f"{folder_path} = {samples_string}\n")
 
 ###Monitor Jobs---------------------------
 #'
@@ -221,20 +237,6 @@ def monitor_jobs(job_ids):
     # If we exit the while loop, it means all jobs have completed
     print("All jobs are done!")
 
-def pause_for_minutes(minutes):
-    """
-    Pause the script execution for a specified number of minutes.
-    
-    Args:
-    minutes (int): The number of minutes to pause.
-    """
-    seconds = minutes * 60
-    for remaining in range(seconds, 0, -1):
-        sys.stdout.write(f"\rPausing for {remaining} seconds...")
-        sys.stdout.flush()
-        time_module.sleep(1)
-    print("\nPause completed!")
-
 
 
 if __name__ == "__main__":
@@ -254,7 +256,7 @@ if __name__ == "__main__":
         os.makedirs(pathExperiment)
     
     depth = input_dir['depth']
-    Pause_to_check = input_dir['Pause_to_check']
+    reorganized = input_dir['reorganized']
 
     run_bash = bash_script['run_bash']
     quest = bash_script['quest']
@@ -269,7 +271,6 @@ if __name__ == "__main__":
 
     #Step 1
     pathStep1 = os.path.join(pathScript,"Step1_extractBarcode","Envelope.py")
-    # pathStaggerFile = parameters['step1ExtractBarcode']['staggerFile']
     checkVector = parameters['step1ExtractBarcode']["checkVector"]
     lengthBarcode = parameters['step1ExtractBarcode']["barcodeLength"]
     minPhredScore = parameters['step1ExtractBarcode']["minPhred"]
@@ -280,13 +281,12 @@ if __name__ == "__main__":
     pathStep2 = os.path.join(pathScript,"Step2_LVHistogram_MultipleSample","Step2.py")
     lvHistogramFraction = parameters["step2LvHistogramMultipleSamples"]["lvHistogramFraction"]
     lvHistogramLength = parameters["step2LvHistogramMultipleSamples"]["lvHistogramLength"]
-    # commandStep2 = ["python3", pathStep2, pathScript, pathExperiment, sampleArray, lvHistogramFraction, lvHistogramLength]
 
     #Step 3
     pathStep3 = os.path.join(pathScript,"Step3_Starcode","Step3.py")
-    combinedSample = parameters["step3StarcodeLvHistogram"]["combinedSample"]
-    distanceStarcode = parameters["step3StarcodeLvHistogram"]["distanceStarcode"]
-    # sampleArrayStarcode = parameters["step3StarcodeLvHistogram"]["sampleArrayStarcode"]
+    combinedSample = parameters["step3Starcode"]["combinedSample"]
+    distanceStarcode = parameters["step3Starcode"]["distanceStarcode"]
+
 
     ## Make input txt file for the new makebash script so there can be an editable bash script 
     # Create a txt file that contains all the necessary inputs for the bash script in the different experiments 
@@ -332,65 +332,82 @@ if __name__ == "__main__":
     
     print(f"Input file '{input_file}' has been created in {pathExperiment}")
 
-    # If there is a need for sample sheet and primer sheet to make StaggerFileAll
-    if staggerfileall == "NA" : 
-        # Construct the path to the main reorganization v1 when the data has sample sheet and primers
-        Reorg1 = os.path.join(pathScript, "Step0_1reorganization/Reorganizationv1.py")
+    if reorganized == True: 
+        main_folders = {}
 
-        # Prepare the command to run the reorganization script
-        command_reorg = ["python3", Reorg1, path, "--sample_sheet", sample_sheet, "--primers_sheet",  primers_sheet, "--scriptpath", pathScript]
-        # If StaggerFileAll already exists. 
-    # elif sample_sheet == "NA" and primers_sheet == "NA": 
-    else:
-        # Construct the path to the main reorganization script when the data already has a staggerfileall
-        Reorg2 = os.path.join(pathScript, "Step0_1reorganization/Reorganizationv2.py")
+        for root, folders, files in os.walk(pathExperiment):
+            # Get the current depth of the directory
+            depth = root[len(pathExperiment):].count(os.sep)
 
-        # Prepare the command to run the reorganization script
-        command_reorg = ["python3", Reorg2, path, "--staggerfileall", staggerfileall, "--scriptpath", pathScript, "-exp", pathExperiment]
+            # We're interested in the second level of subdirectories (depth == 1)
+            if depth == 1:
+                # The experiment path is the current root
+                experiment_path = root
+                # The samples are in the 'raw' subfolder
+                raw_path = os.path.join(root, 'raw')
+                
+                if os.path.exists(raw_path):
+                    samples = [folder for folder in os.listdir(raw_path) 
+                                if os.path.isdir(os.path.join(raw_path, folder))]
+                    
+                    # Add to our dictionary
+                    main_folders[experiment_path] = samples
 
-    # Execute the main reorganization script
-    print(f"Executing command: {' '.join(command_reorg)}")
-    run_command(command_reorg)
+            # We don't need to go deeper than the first level
+            # This condition checks if the current directory is more than one level deep from the starting point.
+            if depth > 1:
+                # If the condition is true, this line clears the folders list.
+                del folders[:]
+        
+        # Write the list of main_folders path 
+        write_main_folders_dict(input_file, main_folders)
 
-    # Check if we should pause or stop after reorganization
-    # This pause is so that we can edit the information in the templateInputFullRun.py
-    if Pause_to_check is True: 
-        print("Actions paused, will not create a job and run them. Rerun the script to create a job and run each job")
-        sys.exit()  # Use sys.exit() instead of return
+        
     else: 
-        # Pause for the specified time
-        pause_for_minutes(Pause_to_check)
+        # If there is a need for sample sheet and primer sheet to make StaggerFileAll
+        if staggerfileall == "NA" : 
+            # Construct the path to the main reorganization v1 when the data has sample sheet and primers
+            Reorg1 = os.path.join(pathScript, "Step0_1reorganization/Reorganizationv1.py")
 
+            # Prepare the command to run the reorganization script
+            command_reorg = ["python3", Reorg1, path, "--sample_sheet", sample_sheet, "--primers_sheet",  primers_sheet, "--scriptpath", pathScript]
+            # If StaggerFileAll already exists. 
+        # elif sample_sheet == "NA" and primers_sheet == "NA": 
+        
+        else:
+            # Construct the path to the main reorganization script when the data already has a staggerfileall
+            Reorg2 = os.path.join(pathScript, "Step0_1reorganization/Reorganizationv2.py")
+
+            # Prepare the command to run the reorganization script
+            command_reorg = ["python3", Reorg2, path, "--staggerfileall", staggerfileall, "--scriptpath", pathScript, "-exp", pathExperiment]
+
+        # Execute the main reorganization script
+        print(f"Executing command: {' '.join(command_reorg)}")
+        run_command(command_reorg)
 
 
     # Start running the bash script that will initiate the different bash scripts in each experiment folders 
-    if run_bash == True : 
-        # Prepare and run the make_bash.py script
-        pathmake_bash = os.path.join(pathScript, "Step0_2makebash", "make_bash.py")
-        command_makebash = [
-            "python3", pathmake_bash, 
-            pathExperiment,
-            "-d", depth,
-            "-q", quest,
-            "-a", account,
-            "-p", partition,
-            "-n", nodes,
-            "-nt", ntasks,
-            "-t", time,
-            "-m", memory,
-            "-e", email,
-            "-mt", mail_type
-        ]
 
-        # Run the make_bash.py script and extract job IDs
-        stdout = run_command(command_makebash)
-        job_ids_step1 = extract_job_ids(stdout)
+    # Prepare and run the make_bash.py script
+    pathmake_bash = os.path.join(pathScript, "Step0_2makebash", "make_bash.py")
+    command_makebash = [
+        "python3", pathmake_bash, 
+        pathExperiment,
+        run_bash,
+        "-d", depth,
+        "-q", quest,
+        "-a", account,
+        "-p", partition,
+        "-n", nodes,
+        "-nt", ntasks,
+        "-t", time,
+        "-m", memory,
+        "-e", email,
+        "-mt", mail_type
+    ]
 
-        # Monitor jobs if any were submitted
-        if job_ids_step1:
-            print(f"Jobs submitted with IDs: {', '.join(job_ids_step1)}")
-            monitor_jobs(job_ids_step1, max_wait_time)
-            print("FASTQ reorganization process completed.")
-        else:
-            print("No jobs were submitted in Step 0_2. Check the script output for errors.")
-            print(f"Script output:\n{stdout}")
+    # Run the make_bash.py script
+    print(f"Executing command: {' '.join(command_makebash)}")
+    run_command(command_makebash)
+
+
