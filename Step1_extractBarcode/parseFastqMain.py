@@ -67,14 +67,14 @@ else:
     outFilePrefix = args.sampleName
 
 if args.checkVector == 'both':
-	outFileUMI = outFilePrefix + "_Index.gz"
+	outFileUMI = outFilePrefix + "_UMI.gz"
 	outFileCounts = outFilePrefix + "_counts.gz"
-	outFileUMICounts = outFilePrefix + "_IndexCountsOnly.gz"
+	outFileUMICounts = outFilePrefix + "_UMICountsOnly.gz"
 	outFileReadCounts = outFilePrefix + "_readCountsOnly.gz"
 elif args.checkVector == 'before':
 	outFileUMI = outFilePrefix + "_Index_liberal.gz"
 	outFileCounts = outFilePrefix + "_counts_liberal.gz"
-	outFileUMICounts = outFilePrefix + "_IndexCountsOnly_liberal.gz"
+	outFileUMICounts = outFilePrefix + "_UMICountsOnly_liberal.gz"
 	outFileReadCounts = outFilePrefix + "_readCountsOnly_liberal.gz"
 
 outFileMissingBeforeBarcode = outFilePrefix + "_missingBeforeBarcode.gz"

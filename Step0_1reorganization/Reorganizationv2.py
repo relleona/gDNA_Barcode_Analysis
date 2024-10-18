@@ -129,13 +129,6 @@ def main(input_path, output_path, stagger_file_path, script_path):
         create_stagger_file(os.path.basename(main_folder_path), stagger_file_path, output_path)
         staggerfilepath = os.path.join(main_folder_path, "StaggerFile.csv")
 
-        # # Modify the config file using the imported function
-        # modify_config(
-        #     sourcefile,
-        #     destinationfile,
-        #     main_folder_path,
-        #     staggerfilepath,
-        #     sample_id_list)
 
     # Print completion message
     print("File reorganization and CSV file creation complete.")

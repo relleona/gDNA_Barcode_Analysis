@@ -175,9 +175,9 @@ def parseBarcode_both(inFileName, staggerLength, barcodeLength, minQuality_Phred
 					barcode = seq_record[1][VBB_position[1]:VBB_position[1]+ barcodeLength] #recording barcode
 					if barcode not in barcode_dict:
 						barcode_dict[barcode] = [seq_record[2][VBB_position[1]:VBB_position[1]+ barcodeLength]] # record quality score 
-						barcode_dict[barcode].append(seq_record[1][VBB_position[0]-staggerLength:VBB_position[0]]) # record stagger sequence
+						barcode_dict[barcode].append(seq_record[1][0:VBB_position[0]-staggerLength]) # record stagger sequence
 					elif barcode in barcode_dict:
-						barcode_dict[barcode].append(seq_record[1][VBB_position[0]-staggerLength:VBB_position[0]])
+						barcode_dict[barcode].append(seq_record[1][0:VBB_position[0]-staggerLength])
 			elif VBB_match and not VBA_match:
 				missingVectorAfter.append(seq_record)
 			elif VBA_match and not VBB_match:
@@ -252,9 +252,9 @@ def parseBarcode_before(inFileName, staggerLength, barcodeLength, minPhred, asci
 					barcode = seq_record[1][position[1]:position[1] + barcodeLength] #recording barcode
 					if barcode not in barcode_dict:
 						barcode_dict[barcode] = [seq_record[2][position[1]:position[1] + barcodeLength]] # recording the quality 
-						barcode_dict[barcode].append(seq_record[1][position[0]-staggerLength:position[0]]) # recording stagger sequence, demultiplexing
+						barcode_dict[barcode].append(seq_record[1][0:position[0]-staggerLength]) # recording stagger sequence, demultiplexing
 					elif barcode in barcode_dict:
-						barcode_dict[barcode].append(seq_record[1][position[0]-staggerLength:position[0]])
+						barcode_dict[barcode].append(seq_record[1][0:position[0]-staggerLength])
 	
 			# If the vector before barcode sequence is not found, this adds the read to missingVectorBefore.
 			else:
