@@ -82,7 +82,7 @@ def create_stager_file_all(output_dir, sample_data):
                 # Fallback for sample IDs without underscores
                 main_folder = str_sample_id
             # Write the row for this sample
-            writer.writerow([str_sample_id, os.path.join(output_dir, main_folder, str_sample_id), index2, stagger_length])
+            writer.writerow([str_sample_id, os.path.join(output_dir, main_folder, "raw", str_sample_id), index2, stagger_length])
     # Print confirmation message
     print(f"Created StagerFileAll.csv in {output_dir}")
     # Return the path of the created file

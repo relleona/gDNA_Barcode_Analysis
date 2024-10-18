@@ -50,8 +50,8 @@ parser.add_argument("-r", "--includeReads", help = "If specified, output additio
 parser.add_argument("-checkVector", help = "Option to check vector sequence before or on both sides of the barcode sequence.", default = "both", choices = ["both", "before"]) 
 parser.add_argument("-barcodeLength", help = "If checkVector before specified, input here your desired barcode length.", type = int) 
 parser.add_argument("-Q", "--minPhred", help = "Specify the minimum phredscore required to include a readout. Filters reads with more than 5 bases before the barcode with low phredscore.", default = 14, type = int) 
-parser.add_argument("-a", "--asciioffset", help = "If PhredScore has letters, ascii offset will be 33, otherwise it will be 64. Most recent version of Illumina uses Phred Score of 33. ", default = 33, type = int)
-parser.add_argument("-e", "--excludedReads", help = "If specified, output txt.gz files containing reads excluded from the UMI and count files.", action = 'store_true')
+parser.add_argument("-a", "--asciioffset", help = "If PhredScore has letters, ascii offset will be 33, otherwise it will be 64. Most recent version of Illumina uses Phred Score offset of 33. ", default = 33, type = int)
+parser.add_argument("-e", "--excludedReads", help = "If specified, output txt.gz files containing reads excluded from the count files.", action = 'store_true')
 args = parser.parse_args()
 
 experimentDirectory = args.pathExperiment
@@ -67,14 +67,14 @@ else:
     outFilePrefix = args.sampleName
 
 if args.checkVector == 'both':
-	outFileUMI = outFilePrefix + "_UMIs.gz"
+	outFileUMI = outFilePrefix + "_Index.gz"
 	outFileCounts = outFilePrefix + "_counts.gz"
-	outFileUMICounts = outFilePrefix + "_UMICountsOnly.gz"
+	outFileUMICounts = outFilePrefix + "_IndexCountsOnly.gz"
 	outFileReadCounts = outFilePrefix + "_readCountsOnly.gz"
 elif args.checkVector == 'before':
-	outFileUMI = outFilePrefix + "_UMIs_liberal.gz"
+	outFileUMI = outFilePrefix + "_Index_liberal.gz"
 	outFileCounts = outFilePrefix + "_counts_liberal.gz"
-	outFileUMICounts = outFilePrefix + "_UMICountsOnly_liberal.gz"
+	outFileUMICounts = outFilePrefix + "_IndexCountsOnly_liberal.gz"
 	outFileReadCounts = outFilePrefix + "_readCountsOnly_liberal.gz"
 
 outFileMissingBeforeBarcode = outFilePrefix + "_missingBeforeBarcode.gz"

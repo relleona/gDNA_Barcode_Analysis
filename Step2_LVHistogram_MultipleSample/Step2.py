@@ -26,7 +26,7 @@ args = parser.parse_args()
 # commandMultipleSamples = ["python3", pathMultipleSamples, args.experimentPath] + sampleArray +["-inputFraction",args.lvHistogramFraction, "-inputLength",args.lvHistogramLength]
 # subprocess.call(commandMultipleSamples)
 
-pathSamples = os.path.join(args.scriptPath, "Step2_LVHistogram_MultipleSample","barcodelength_multiplesamples.py" )
+pathSamples = os.path.join(args.scriptPath, "Step2_LVHistogram_MultipleSample","multibarcodeAnalyzer.py" )
 pathLvHistogram= os.path.join(args.scriptPath, "LVHistogram.py" )
 
 # Creating txts of barcode_length and multiple samples

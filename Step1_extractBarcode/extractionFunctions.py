@@ -140,8 +140,6 @@ def parseBarcode_both(inFileName, staggerLength, barcodeLength, minQuality_Phred
 
 	vectorBeforeBarcode = "TCGACTAAACGCGCTACTTGAT" #
 	vectorAfterBarcode = "ATCCTACTTGTACAGCTCGT"
-	# vectorBeforeBarcode = re.compile(r'(?e)(TCGACTAAACGCGCTACTTGAT){e<=4}') #vector primer site as reg expression. Allow up to 4 mismatches. Less than 4 errors - including deletion, insertion and substitution aka GFP primers 
-	# vectorAfterBarcode = re.compile(r'(?e)(?r)(ATCCTACTTGTACAGCTCGT){e<=5}') #vector sequence after barcode as reg expression. Allow up to 5 mismatches and search from end of string first. ***What determines these numbers?
 	tot_reads = 0
 
 	fastQ_file = combine_fastq(inFileName)

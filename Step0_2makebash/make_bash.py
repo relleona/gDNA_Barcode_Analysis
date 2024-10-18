@@ -83,6 +83,21 @@ def file_to_dict(file_path):
         print(f"Error: Could not read file '{file_path}'.")
         return None
 
+###Extract Job IDs---------------------------
+#'
+#' This function extracts job IDs from the output of a job submission command.
+#'
+#' @param stdout A string containing the standard output from a job submission command.
+#'
+#' @return A list of strings representing the extracted job IDs.
+#'
+#' @details The function performs the following steps:
+#'          1. Splits the stdout into lines
+#'          2. Identifies lines containing "Submitted batch job"
+#'          3. Extracts the last word from these lines (assumed to be the job ID)
+#'
+def extract_job_ids(stdout):
+    return [line.split()[-1] for line in stdout.split('\n') if "Submitted batch job" in line]
 
 def create_and_submit_slurm_script(output_path, subfolder, args):
     # Get current date and time
@@ -211,18 +226,27 @@ def create_and_submit_slurm_script(output_path, subfolder, args):
     
     print(f"Created job script for {subfolder}: {job_file}")
 
-    # Submit the job
-    result = subprocess.run(["sbatch", job_file], capture_output=True, text=True)
-    if result.returncode == 0:
-        print(f"Job for {subfolder} submitted successfully")
-        print("Output:", result.stdout)
-    else:
-        print(f"Job submission for {subfolder} failed")
-        print("Error:", result.stderr)
+    if args.run_bash == True : 
+        # Submit the job
+        result = subprocess.run(["sbatch", job_file], capture_output=True, text=True)
+        if result.returncode == 0:
+            print(f"Job for {subfolder} submitted successfully")
+            job_ids_step2 = extract_job_ids(result.stdout)
+            if job_ids_step2:
+                print(f"Jobs submitted with IDs: {', '.join(job_ids_step2)}")
+            
+        else:
+            print(f"Job submission for {subfolder} failed")
+            print("No jobs were submitted in Step 0_2. Check the script output for errors.")
+            print("Error:", result.stderr)
+    else: 
+        print('Actions paused, Jobs are created, waiting to be checked. Rerun the Inputs.py script with "run_bash" : "True" to run each job')
 
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate and submit SLURM job scripts for subfolders")
     parser.add_argument("output_path", help="Path to the experiment directory")
+    parser.add_argument("run_bash", help="If run_bash is true, bash scripts will be run immediately after its created.", type=bool, default=True)
     parser.add_argument("-d", "--depth", type=int, default=1, help="Depth of subfolders to process (default: 1)")
     parser.add_argument("-q", "--quest", help="If True, Quest is used", type=bool, default=True)
     parser.add_argument("-a", "--account", help="Account for computational resources")
