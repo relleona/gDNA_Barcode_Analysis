@@ -74,11 +74,9 @@ if __name__ == "__main__":
     print(samples)
 
     #Format additional arguments
-    additionalArguments = ["-checkVector", args.checkVector, "--minPhred", args.minPhred, "--asciioffset", args.asciioffset]
+    additionalArguments = ["-checkVector", args.checkVector, "--minPhred", args.minPhred, "--asciioffset", args.asciioffset, "-barcodeLength", args.barcodeLength]
     if args.includeReads:
         additionalArguments.extend(["--includeReads"])
-    if args.checkVector == "both":
-        additionalArguments.extend(["-barcodeLength", args.barcodeLength])
     if args.excludeReads == "True":
         additionalArguments.extend(["--excludeReads"])
 
