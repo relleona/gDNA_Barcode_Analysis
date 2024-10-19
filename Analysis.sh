@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=8
 #SBATCH --mem-per-cpu=2GB
-#SBATCH --time=03:00:00
+#SBATCH --time=01:00:00
 #SBATCH --job-name=LV_30
 #SBATCH --output=outlog
 #SBATCH --error=errlog

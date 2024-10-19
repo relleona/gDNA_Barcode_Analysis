@@ -44,6 +44,7 @@ import time as time_module  # Import with a different name to avoid conflicts
 import os
 import sys
 import subprocess
+import numpy as np
 from argparse import ArgumentParser
 
 
@@ -52,10 +53,10 @@ from argparse import ArgumentParser
 #Input and output directories needed for the reorganization step
 input_dir = {
     #Path to all scripts
-    "pathScript": "/projects/b1042/GoyalLab/aleona/gDNA_Barcode_Analysis",
+    "pathScript": "/projects/b1042/GoyalLab/aleona/gDNA_Barcode_Analysis/",
     
     #The path to the downloaded FASTQ files
-    "path":"/projects/b1042/GoyalLab/aleona/YG10Xbarcode/Experiments",
+    "path":"NA",
     
     #The path to sample sheet, if doesn't exist put "NA"
     "sample_sheet":"NA", #created or taken from ENSEMBLE/GENECODE 
@@ -64,10 +65,10 @@ input_dir = {
     "primers_sheet": "NA",
     
     # If stagger file all exists already without the need for Sample Sheet or Primers Sheet put the path, if not place it as "NA"
-    "staggerfileall": "/projects/b1042/GoyalLab/aleona/YG10Xbarcode/Exp3/StaggerFileAll.csv", # Can be NA
+    "staggerfileall": "NA", # Can be NA
     
     #The path to folders that will later contain the experiments 
-    "exp": "/projects/b1042/GoyalLab/aleona/YG10Xbarcode/Exp3",
+    "exp": "/projects/b1042/GoyalLab/aleona/YG10Xbarcode/Experiments/",
 
     #Depth of subfolders within the Main Experiment folder above to run the job scripts for
     "depth" : "1", #Default is 1 and usually its the same if the format is followed, 
@@ -89,7 +90,7 @@ parameters = {
         
         # Specify whether to save unwanted (bad) barcodes to a separate file
         # Set to False to save bad barcodes, True to exclude them   
-        "excludedReads": "False", 
+        "excludedReads": "True", 
 
         # If PhredScore has letters, ascii offset will be 33, otherwise it will be 64. 
         # Most recent version of Illumina uses Phred Score offset of 33.
@@ -103,7 +104,7 @@ parameters = {
 
         # If partial is specified above, what is the length of the barcode?
         # If full is specified above, indicate the same number as barcodeLength above?
-        "lvHistogramLength": "90"
+        "lvHistogramLength": "50"
     },
 
     # Do you want to see the LV Histograms and check if you have specified the right length
@@ -122,7 +123,7 @@ parameters = {
 }
 
 bash_script ={
-    "run_bash": "True",
+    "run_bash": "False",
     "quest" : "True", #Default is TRUE
  ##For creating the bash scripts in Quest
     "account":"b1042",
@@ -130,9 +131,9 @@ bash_script ={
     "nodes": "1",
     "ntasks":"8",
     "memory":"20GB",
-    "time":"12:00:00", 
+    "time":"2:00:00", 
     "email":"AureliaLeona2028@u.northwestern.edu",
-    "mail_type":"END,FAIL" #BEGIN, END, FAIL AND ALL
+    "mail_type":"ALL" #BEGIN, END, FAIL AND ALL
 }
 
 
@@ -169,7 +170,12 @@ def run_command(command):
     """
     print("Running command:", " ".join(map(str, command)))
     try:
-        result = subprocess.run(command, check=True, capture_output=True, text=True)
+        # Try with capture_output (Python 3.7+)
+        try:
+            result = subprocess.run(command, check=True, capture_output=True, text=True)
+        except TypeError:
+            # Fall back to older method for Python 3.6
+            result = subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         print(result.stdout)
         return result.stdout
     except subprocess.CalledProcessError as e:
@@ -331,34 +337,54 @@ if __name__ == "__main__":
         summary.write(f"DISTANCE = {distanceStarcode}\n\n\n")
     
     print(f"Input file '{input_file}' has been created in {pathExperiment}")
+    print(f"File creation attempted. Does it exist? {os.path.exists(input_file)}")
+    print(f"The file should be at: {os.path.join(os.getcwd(), input_file)}")
 
     if reorganized == True: 
+        print("Entering reorganized block")
         main_folders = {}
 
         for root, folders, files in os.walk(pathExperiment):
             # Get the current depth of the directory
-            depth = root[len(pathExperiment):].count(os.sep)
+            depth_reorganized = root[len(pathExperiment):].count(os.sep)
+            # print(f"Checking directory: {root}, depth: {depth_reorganized}")
 
             # We're interested in the second level of subdirectories (depth == 1)
-            if depth == 1:
+            if depth_reorganized == 0:
                 # The experiment path is the current root
                 experiment_path = root
                 # The samples are in the 'raw' subfolder
                 raw_path = os.path.join(root, 'raw')
+                # print(f"Experiment path: {experiment_path}")
+                # print(f"Raw path: {raw_path}")
                 
                 if os.path.exists(raw_path):
                     samples = [folder for folder in os.listdir(raw_path) 
                                 if os.path.isdir(os.path.join(raw_path, folder))]
+                    print(f"Samples found: {samples}")
                     
                     # Add to our dictionary
                     main_folders[experiment_path] = samples
 
             # We don't need to go deeper than the first level
             # This condition checks if the current directory is more than one level deep from the starting point.
-            if depth > 1:
+            if depth_reorganized > 1:
                 # If the condition is true, this line clears the folders list.
                 del folders[:]
+            # print(f"Final main_folders: {main_folders}")
         
+        os.chdir(pathExperiment)
+        # Add a header before appending the new data
+        print("Contents of main_folders:")
+        for path, samples in main_folders.items():
+            print(f"{path}: {samples}")
+
+        if not main_folders:
+            print("Warning: main_folders dictionary is empty")
+            
+        with open(input_file, "a") as file:
+            file.write("\n\nExperiment Folders and Samples:\n")
+            file.write("================================\n")
         # Write the list of main_folders path 
         write_main_folders_dict(input_file, main_folders)
 
@@ -388,13 +414,15 @@ if __name__ == "__main__":
 
     # Start running the bash script that will initiate the different bash scripts in each experiment folders 
 
+    print(f"Depth being passed to make_bash.py: {depth}")
+    
     # Prepare and run the make_bash.py script
     pathmake_bash = os.path.join(pathScript, "Step0_2makebash", "make_bash.py")
     command_makebash = [
         "python3", pathmake_bash, 
         pathExperiment,
         run_bash,
-        "-d", depth,
+        "-d", str(depth),
         "-q", quest,
         "-a", account,
         "-p", partition,
@@ -407,7 +435,7 @@ if __name__ == "__main__":
     ]
 
     # Run the make_bash.py script
-    print(f"Executing command: {' '.join(command_makebash)}")
+    print(f"Executing command: {' '.join(str(item) for item in command_makebash)}")
     run_command(command_makebash)
 
 

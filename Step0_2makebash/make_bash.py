@@ -100,6 +100,8 @@ def extract_job_ids(stdout):
     return [line.split()[-1] for line in stdout.split('\n') if "Submitted batch job" in line]
 
 def create_and_submit_slurm_script(output_path, subfolder, args):
+
+
     # Get current date and time
     today = date.today().strftime('%Y-%m-%d')
     current_time = datetime.now().strftime("%H.%M")
@@ -260,6 +262,8 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
+    processed_experiments = set()  # Keep track of processed experiments
+
     # os.walk() is a generator that yields a 3-tuple for each directory it visits:
     # root: The current directory path
     # dirs: A list of subdirectories in the current directory
@@ -271,5 +275,12 @@ if __name__ == "__main__":
         # ensures we ony process directories at the specified depth level
         if depth == args.depth:
             subfolder = os.path.relpath(root, args.output_path)
-            create_and_submit_slurm_script(args.output_path, subfolder, args)
+            components = subfolder.split(os.sep)
+            experiment_name = components[0] if components else ''
+            print(experiment_name)
+
+            if experiment_name and experiment_name not in processed_experiments:
+                print(f"Processing experiment: {experiment_name}")
+                create_and_submit_slurm_script(args.output_path, experiment_name, args)
+                processed_experiments.add(experiment_name)
 
