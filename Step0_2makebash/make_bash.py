@@ -197,7 +197,7 @@ def create_and_submit_slurm_script(output_path, subfolder, args):
             '    "${INPUTLENGTH}"'
         ]
         fh.write('\n'.join(step2_cmd) + '\n\n')
-        
+
         # Step3 Variables
         fh.write(f"STEP3PATH={result_dict['STEP3PATH']}\n")
         # The key to the sample array is the path to the subfolder 
@@ -207,6 +207,20 @@ def create_and_submit_slurm_script(output_path, subfolder, args):
             fh.write(f'STARCODEARRAY="{"Multiple_Samples"}"\n\n')
         else:
             fh.write(f'STARCODEARRAY="{result_dict[str(pathtosubfolder)]}"\n\n')
+
+        # If pausebeforestep3 is true then put a pause 
+        if result_dict['PAUSEBEFORESTEP3'] == "True":
+            # Stop the script before Step 3
+            fh.write('PAUSEBEFORESTEP3=true\n')
+        else:
+            fh.write('PAUSEBEFORESTEP3=false\n')
+
+        fh.write('\n')
+        fh.write('if [${PAUSEBEFORESTEP3}=true]; then \n')
+        fh.write('  echo "Step 2 has completed. The script will now stop before executing Step 3."\n')
+        fh.write('  echo "To run Step 3, please submit a new job or modify this script to continue."\n')
+        fh.write('  exit 0\n')
+        fh.write('fi \n\n')
 
         # Step 3
         fh.write("# Step 3\n")
@@ -221,8 +235,8 @@ def create_and_submit_slurm_script(output_path, subfolder, args):
             '    "${STARCODEARRAY}" \\',
             '    "${FRACTION}"',
         ]
-        fh.write('\n'.join(step3_cmd) + '\n')
-
+        fh.write('\n'.join(step3_cmd) + '\n\n')
+            
     print(f"Job file created: {job_file}")
     # return job_file
     
@@ -248,7 +262,6 @@ def create_and_submit_slurm_script(output_path, subfolder, args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate and submit SLURM job scripts for subfolders")
     parser.add_argument("output_path", help="Path to the experiment directory")
-    parser.add_argument("run_bash", help="If run_bash is true, bash scripts will be run immediately after its created.", type=bool, default=True)
     parser.add_argument("-d", "--depth", type=int, default=1, help="Depth of subfolders to process (default: 1)")
     parser.add_argument("-q", "--quest", help="If True, Quest is used", type=bool, default=True)
     parser.add_argument("-a", "--account", help="Account for computational resources")
@@ -259,6 +272,7 @@ if __name__ == "__main__":
     parser.add_argument("-m", "--memory", help="Memory needed to run the job", default="60GB")
     parser.add_argument("-e", "--email", help="Email for job status")
     parser.add_argument("-mt", "--mail_type", help="Mail type for job status")
+    parser.add_argument("--run-bash", action="store_true", help="If set, bash scripts will be run immediately after creation.")
     
     args = parser.parse_args()
     

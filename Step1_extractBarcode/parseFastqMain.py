@@ -51,7 +51,7 @@ parser.add_argument("-checkVector", help = "Option to check vector sequence befo
 parser.add_argument("-barcodeLength", help = "If checkVector before specified, input here your desired barcode length.", type = int) 
 parser.add_argument("-Q", "--minPhred", help = "Specify the minimum phredscore required to include a readout. Filters reads with more than 5 bases before the barcode with low phredscore.", default = 14, type = int) 
 parser.add_argument("-a", "--asciioffset", help = "If PhredScore has letters, ascii offset will be 33, otherwise it will be 64. Most recent version of Illumina uses Phred Score offset of 33. ", default = 33, type = int)
-parser.add_argument("-e", "--excludedReads", help = "If specified, output txt.gz files containing reads excluded from the count files.", action = 'store_true')
+parser.add_argument("-e", "--excludeReads", help = "If specified, output txt.gz files containing reads excluded from the count files.", action = 'store_true')
 args = parser.parse_args()
 
 experimentDirectory = args.pathExperiment
