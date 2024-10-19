@@ -109,7 +109,7 @@ os.chdir(outFileDirectory)
 writeOutFileUMIs(barcode_dict, outFileUMI)             
 
 # If excluded reads are true, bad Barcodes are also written with each issue in a separate file
-if args.excludedReads == True:
+if args.excludeReads == True:
 	writeOutFileBadSeqRecord(missingBeforeBarcode, outFileMissingBeforeBarcode)
 	check_file_created(outFileMissingBeforeBarcode)
 	writeOutFileBadSeqRecord(badQscore, outFileBadPhred)
