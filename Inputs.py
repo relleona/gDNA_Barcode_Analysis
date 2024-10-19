@@ -68,7 +68,7 @@ input_dir = {
     "staggerfileall": "NA", # Can be NA
     
     #The path to folders that will later contain the experiments 
-    "exp": "/projects/b1042/GoyalLab/aleona/YG10Xbarcode/Experiments/",
+    "exp": "/projects/b1042/GoyalLab/aleona/Experiments_gDNA/",
 
     #Depth of subfolders within the Main Experiment folder above to run the job scripts for
     "depth" : "1", #Default is 1 and usually its the same if the format is followed, 
@@ -80,10 +80,10 @@ input_dir = {
 parameters = {
     "step1ExtractBarcode": {
         # If they have primers before and after barcode
-        "checkVector": "both", # choices : ["both", "before"]
+        "checkVector": "before", # choices : ["both", "before"]
 
         # Length of the barcode 
-        "barcodeLength": "100",
+        "barcodeLength": "90",
         
         # Minimum phred score 
         "minPhred": "14",
@@ -108,7 +108,7 @@ parameters = {
     },
 
     # Do you want to see the LV Histograms and check if you have specified the right length
-    "pauseBeforeStep3": False,
+    "pauseBeforeStep3": True,
 
     # This step will process starcode according to the length above and the parameters below
     "step3Starcode": {
@@ -123,7 +123,7 @@ parameters = {
 }
 
 bash_script ={
-    "run_bash": "False",
+    "run_bash": False,
     "quest" : "True", #Default is TRUE
  ##For creating the bash scripts in Quest
     "account":"b1042",
@@ -421,7 +421,6 @@ if __name__ == "__main__":
     command_makebash = [
         "python3", pathmake_bash, 
         pathExperiment,
-        run_bash,
         "-d", str(depth),
         "-q", quest,
         "-a", account,
@@ -433,6 +432,10 @@ if __name__ == "__main__":
         "-e", email,
         "-mt", mail_type
     ]
+
+    if run_bash == True: 
+        command_makebash.append("--run-bash")
+
 
     # Run the make_bash.py script
     print(f"Executing command: {' '.join(str(item) for item in command_makebash)}")
