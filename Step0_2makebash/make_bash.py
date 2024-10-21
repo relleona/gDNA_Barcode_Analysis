@@ -216,7 +216,7 @@ def create_and_submit_slurm_script(output_path, subfolder, args):
             fh.write('PAUSEBEFORESTEP3=false\n')
 
         fh.write('\n')
-        fh.write('if [${PAUSEBEFORESTEP3}=true]; then \n')
+        fh.write('if [[ "${PAUSEBEFORESTEP3}" == "true" ]]; then  \n')
         fh.write('  echo "Step 2 has completed. The script will now stop before executing Step 3."\n')
         fh.write('  echo "To run Step 3, please submit a new job or modify this script to continue."\n')
         fh.write('  exit 0\n')

@@ -131,7 +131,7 @@ bash_script ={
     "nodes": "1",
     "ntasks":"8",
     "memory":"20GB",
-    "time":"2:00:00", 
+    "time":"5:00:00", 
     "email":"AureliaLeona2028@u.northwestern.edu",
     "mail_type":"ALL" #BEGIN, END, FAIL AND ALL
 }
