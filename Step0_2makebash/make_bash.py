@@ -154,7 +154,7 @@ def create_and_submit_slurm_script(output_path, subfolder, args):
         # Step1 Variables
         fh.write(f"STEP1PATH={result_dict['STEP1PATH']}\n")
         fh.write(f"EXPERIMENT_DIR={pathtosubfolder}/\n")
-        fh.write(f"SCRIPT_DIR={result_dict['SCRIPT_DIR']}/\n")
+        fh.write(f"SCRIPT_DIR={result_dict['SCRIPT_DIR']}\n")
         fh.write(f"STAGGERFILEDIR={os.path.join(pathtosubfolder, 'StaggerFile.csv')}\n")
         fh.write(f"CHECKVECTOR={result_dict['CHECKVECTOR']}\n")
         fh.write(f"BARCODELENGTH={result_dict['BARCODELENGTH']}\n")

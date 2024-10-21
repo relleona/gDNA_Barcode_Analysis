@@ -35,6 +35,11 @@ def combine_fastq(inFileNames):
     # Create the full path for the output file
     outFilePath = os.path.join(input_directory, outFileName)
 
+	# Check if the output file already exists
+    if os.path.exists(outFilePath):
+        print(f"The file {outFileName} already exists. Deleting and rewriting.")
+        os.remove(outFilePath)  # Delete the existing file
+
     # # Check if the file already exists
     # if os.path.exists(outFilePath):
     #     confirm = input(f"The file {outFileName} already exists. Do you want to overwrite it? (y/n): ")
