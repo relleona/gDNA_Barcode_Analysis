@@ -35,31 +35,33 @@ def Barcode_scanner(Combined_Barcode, sampleName, length, distance, ind):
     
     # Step 3: Select the column to update
     column = columns[ind]
-    
-    # Step 4: Read the entire file into memory
-    with open(f'{sampleName}_Barcode{length}_d{distance}.txt', 'r') as f:
-        data = [line.strip().split('\t') for line in f]
-    
-    # Step 5: Process data in parallel
-    with ThreadPoolExecutor() as executor:
-        futures = []
-        for i in range(0, len(data), batch_size):
-            batch = data[i:i+batch_size]
-            futures.append(executor.submit(process_batch, batch))
+
+    # If its not processing 
+    if length != "sequence": 
+        # Step 4: Read the entire file into memory
+        with open(f'{sampleName}_Barcode{length}_d{distance}.txt', 'r') as f:
+            data = [line.strip().split('\t') for line in f]
         
-        # Collect results
-        results = []
-        for future in as_completed(futures):
-            results.append(future.result())
+        # Step 5: Process data in parallel
+        with ThreadPoolExecutor() as executor:
+            futures = []
+            for i in range(0, len(data), batch_size):
+                batch = data[i:i+batch_size]
+                futures.append(executor.submit(process_batch, batch))
+            
+            # Collect results
+            results = []
+            for future in as_completed(futures):
+                results.append(future.result())
     
-    # Step 6: Combine all results 
-    all_data = pd.concat(results, ignore_index=True)
+        # Step 6: Combine all results 
+        all_data = pd.concat(results, ignore_index=True)
     
-    # Update the Combined_Barcode DataFrame
-    # loc = pandas' label-based indexer for selecting data
-    # selects the 'index' column from our processed data that corresponds to Combined_Barcode 
-    # selects the 'sequence' column from our processed data and converts it to a numpy array with .values and inserting them to Combined_Barcode
-    Combined_Barcode.loc[all_data['index'], column] = all_data['sequence'].values
+        # Update the Combined_Barcode DataFrame
+        # loc = pandas' label-based indexer for selecting data
+        # selects the 'index' column from our processed data that corresponds to Combined_Barcode 
+        # selects the 'sequence' column from our processed data and converts it to a numpy array with .values and inserting them to Combined_Barcode
+        Combined_Barcode.loc[all_data['index'], column] = all_data['sequence'].values
     
     return Combined_Barcode
 
