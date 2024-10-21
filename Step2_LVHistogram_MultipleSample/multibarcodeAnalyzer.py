@@ -134,8 +134,9 @@ for sample in SampleList:
 
 # creating output directory
 os.chdir(os.path.join(args.experimentPath, "analyzed"))
-if(not os.path.exists(os.path.join("Multiple_Samples", "LV_Analysis"))):
-    os.mkdir(os.path.join("Multiple_Samples", "LV_Analysis"))
+# If it does not exist, make it 
+os.makedirs(os.path.join("Multiple_Samples", "LV_Analysis"), exist_ok=True)
+
 os.chdir(os.path.join("Multiple_Samples", "LV_Analysis"))
 
 # Outside of the loop 
